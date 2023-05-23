@@ -41,7 +41,7 @@ CREATE TABLE artista (
 CREATE TABLE disco (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     ID_autore INTEGER UNSIGNED NOT NULL,
-    titolo VARCHAR(50) NOT NULL UNIQUE,
+    titolo VARCHAR(50) NOT NULL,
     genere VARCHAR(50),
     copertina BLOB,
     CONSTRAINT generi_musicali CHECK (genere IN ('Hip-Hop' , 'R&B',
@@ -54,6 +54,7 @@ CREATE TABLE disco (
         'Classica',
         'Disco',
         'Altro')),
+	CONSTRAINT disco_unico UNIQUE (ID_autore, titolo),
     CONSTRAINT autore_disco FOREIGN KEY (ID_autore)
         REFERENCES artista (ID)
         ON DELETE NO ACTION ON UPDATE CASCADE
