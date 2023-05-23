@@ -43,8 +43,7 @@ CREATE TABLE disco (
     ID_autore INTEGER UNSIGNED NOT NULL,
     titolo VARCHAR(50) NOT NULL UNIQUE,
     genere VARCHAR(50),
-    barcode VARCHAR(50),
-    copertina BLOB NOT NULL,
+    copertina BLOB,
     CONSTRAINT generi_musicali CHECK (genere IN ('Hip-Hop' , 'R&B',
         'Blues',
         'Funk',
@@ -84,13 +83,14 @@ CREATE TABLE immagine (
 );
 
 -- controllare i tipi
+-- aggiungere check barcode
 CREATE TABLE info_disco (
-    ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     ID_disco INTEGER UNSIGNED NOT NULL UNIQUE,
-    casaEditrice VARCHAR(50),
+	barcode VARCHAR(50),
+    etichetta VARCHAR(50),
     anno INTEGER,
-    formato VARCHAR(50),
-    stato VARCHAR(50),
+    formato VARCHAR(50) NOT NULL,
+    stato VARCHAR(50) NOT NULL,
     CONSTRAINT disco_dettagli FOREIGN KEY (ID_disco)
         REFERENCES disco (ID)
         ON DELETE CASCADE ON UPDATE CASCADE
