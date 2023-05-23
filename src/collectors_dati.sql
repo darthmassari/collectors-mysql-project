@@ -45,10 +45,10 @@ INSERT INTO collezione (ID, ID_collezionista, nome)
 VALUES (2, 1, "My Collection");
 
 
-INSERT INTO condivisa (ID_collezionista, ID_collezione)
+INSERT INTO condivisione (ID_collezionista, ID_collezione)
 VALUES (3, 1);
 
-INSERT INTO condivisa (ID_collezionista, ID_collezione)
+INSERT INTO condivisione (ID_collezionista, ID_collezione)
 VALUES (2, 2);
 
 
@@ -68,41 +68,41 @@ INSERT INTO disco (ID, ID_autore, titolo, genere)
 VALUES (5, 4, "Meteora", "Rock");
 
 
-INSERT INTO catalogo (ID_collezione, ID_disco, quantita)
-VALUES (1, 1, 3);
+INSERT INTO catalogo (ID_collezione, ID_disco, quantita, stato)
+VALUES (1, 1, 3, "n/a");
 
-INSERT INTO catalogo (ID_collezione, ID_disco, quantita)
-VALUES (1, 2, 4);
+INSERT INTO catalogo (ID_collezione, ID_disco, quantita, stato)
+VALUES (1, 2, 4, "Nuovo");
 
-INSERT INTO catalogo (ID_collezione, ID_disco)
-VALUES (2, 4);
+INSERT INTO catalogo (ID_collezione, ID_disco, stato)
+VALUES (2, 4, "n/a");
 
-INSERT INTO catalogo (ID_collezione, ID_disco, quantita)
-VALUES (2, 3, 2);
-
-
-INSERT INTO info_disco (ID_disco, barcode, etichetta, anno, formato, stato)
-VALUES (2, "82156179", "Roc-A-Fella Records", 2008, "CD", "Ottimo");
-
-INSERT INTO info_disco (ID_disco, anno, formato, stato)
-VALUES (5, 2003, "LP", "Buono");
-
-INSERT INTO info_disco (ID_disco, anno, formato, stato)
-VALUES (4, 2022, "Digitale", "n/a");
+INSERT INTO catalogo (ID_collezione, ID_disco, quantita, stato)
+VALUES (2, 5, 2, "Come nuovo");
 
 
-INSERT INTO traccia (ID, ID_disco, titolo, durata)
-VALUES (1, 2, "Welcome To Heartbreak", "00:04:22");
+INSERT INTO info_disco (ID_disco, barcode, descrizione, etichetta, anno, formato)
+VALUES (2, "82156179", "Roc-A-Fella Records", "808s & Heartbreak è il quarto album in studio del rapper statunitense Kanye West, pubblicato il 24 novembre 2008 dall'etichetta discografica Roc-A-Fella Records", 2008, "CD");
 
-INSERT INTO traccia (ID, ID_disco, titolo)
-VALUES (2, 5, "Numb");
+INSERT INTO info_disco (ID_disco, anno, formato)
+VALUES (5, 2003, "Vinile");
 
-INSERT INTO traccia (ID, ID_disco, titolo, durata)
-VALUES (3, 4, "Creepin'", "00:03:41");
+INSERT INTO info_disco (ID_disco, anno, formato)
+VALUES (4, 2022, "Digitale");
 
 
-INSERT INTO contribuisce (ID_artista, ID_traccia)
+INSERT INTO traccia (ID, ID_disco, numero, titolo, durata)
+VALUES (1, 2, 2, "Welcome To Heartbreak", "00:04:22");
+
+INSERT INTO traccia (ID, ID_disco, numero, titolo)
+VALUES (2, 5, 13, "Numb");
+
+INSERT INTO traccia (ID, ID_disco, numero, titolo, durata)
+VALUES (3, 4, 10, "Creepin'", "00:03:41");
+
+
+INSERT INTO collaborazione (ID_artista, ID_traccia)
 VALUES (2, 1);
 
-INSERT INTO contribuisce (ID_artista, ID_traccia)
+INSERT INTO collaborazione (ID_artista, ID_traccia)
 VALUES (5, 3);
