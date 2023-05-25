@@ -1,1 +1,0 @@
-# collectors-mysql-project
