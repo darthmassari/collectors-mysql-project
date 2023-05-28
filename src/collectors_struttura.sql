@@ -106,7 +106,7 @@ CREATE TABLE traccia (
     numero TINYINT NOT NULL,
     titolo VARCHAR(50) NOT NULL UNIQUE,
     durata TIME,
-    CONSTRAINT controllo_durata CHECK (durata < "00:30:00"), 
+    CONSTRAINT controllo_durata CHECK (durata < '00:30:00'),
     CONSTRAINT disco_traccia FOREIGN KEY (ID_disco)
         REFERENCES disco (ID)
         ON DELETE NO ACTION ON UPDATE CASCADE
