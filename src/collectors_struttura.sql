@@ -14,7 +14,7 @@ CREATE TABLE collezione (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     ID_collezionista INTEGER UNSIGNED NOT NULL,
     nome VARCHAR(50) NOT NULL UNIQUE,
-    visibilita ENUM('private', 'public') NOT NULL DEFAULT 'private',
+    visibilita ENUM('privata', 'pubblica') NOT NULL DEFAULT 'privata',
     CONSTRAINT proprietario_collezione FOREIGN KEY (ID_collezionista)
         REFERENCES collezionista (ID)
         ON DELETE CASCADE ON UPDATE CASCADE
@@ -43,6 +43,7 @@ CREATE TABLE disco (
     ID_autore INTEGER UNSIGNED NOT NULL,
     titolo VARCHAR(50) NOT NULL,
     genere VARCHAR(50),
+	formato VARCHAR(50) NOT NULL,
     copertina BLOB,
     CONSTRAINT generi_musicali CHECK (genere IN ('Hip-Hop' , 'R&B',
         'Blues',
@@ -54,47 +55,46 @@ CREATE TABLE disco (
         'Classica',
         'Disco',
         'Altro')),
+	CONSTRAINT formati CHECK (formato IN ("Vinile", "CD", "Digitale", "Musicassetta")),
 	CONSTRAINT disco_unico UNIQUE (ID_autore, titolo),
     CONSTRAINT autore_disco FOREIGN KEY (ID_autore)
         REFERENCES artista (ID)
         ON DELETE NO ACTION ON UPDATE CASCADE
 );
 
-CREATE TABLE catalogo (
+CREATE TABLE copia (
     ID_collezione INTEGER UNSIGNED NOT NULL,
     ID_disco INTEGER UNSIGNED NOT NULL,
     quantita SMALLINT NOT NULL DEFAULT 1,
 	stato VARCHAR(50) NOT NULL,
     CONSTRAINT disco_unico UNIQUE (ID_collezione , ID_disco),
     CONSTRAINT stati_conservazione CHECK (stato IN ("Nuovo", "Come nuovo", "Buono", "Difetti", "n/a")),
-    CONSTRAINT collezione_catalogo FOREIGN KEY (ID_collezione)
+    CONSTRAINT collezione_copia FOREIGN KEY (ID_collezione)
         REFERENCES collezione (ID)
         ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT disco_catalogo FOREIGN KEY (ID_disco)
-        REFERENCES disco (ID)
+    CONSTRAINT disco_copia FOREIGN KEY (ID_disco)
+        REFERENCES disco (ID
+        -- cascade?
         ON DELETE NO ACTION ON UPDATE CASCADE
 );
 
 CREATE TABLE immagine (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     ID_disco INTEGER UNSIGNED NOT NULL UNIQUE,
+	path VARCHAR(512) NOT NULL,
     etichetta VARCHAR(50),
-    file BLOB NOT NULL,
     CONSTRAINT immagine_disco FOREIGN KEY (ID_disco)
         REFERENCES disco (ID)
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- decidere se formato va in disco
 CREATE TABLE info_disco (
     ID_disco INTEGER UNSIGNED NOT NULL UNIQUE,
 	barcode VARCHAR(12),
     descrizione VARCHAR(5000),
     etichetta VARCHAR(50),
     anno SMALLINT UNSIGNED,
-    formato VARCHAR(50) NOT NULL,
     CONSTRAINT controllo_anno CHECK (anno > 1900 AND anno < 2100),
-    CONSTRAINT formati CHECK (formato IN ("Vinile", "CD", "Digitale", "Musicassetta")),
     CONSTRAINT disco_dettagli FOREIGN KEY (ID_disco)
         REFERENCES disco (ID)
         ON DELETE CASCADE ON UPDATE CASCADE
