@@ -1,9 +1,8 @@
 Stato
-	- Ragionare sulla modifica e l'eliminazione di dischi e informazioni
 	- UNIQUE in copia
-	- Ragionare se quando si aggiunge un disco da uno già esistente si ha un altro disco
 	- Passare alle query
 	
 Supposizioni
 	- Gruppi musicali sono artisti
+	- Quando si aggiunge un disco da uno già esistente si ha un altro disco
 	
