@@ -2,15 +2,18 @@
 -- (compositore, musicista) presenti nelle collezioni pubbliche.
 
 DROP PROCEDURE IF EXISTS num_tracce_artista;
+DELIMITER $
 CREATE PROCEDURE num_tracce_artista (ID_artista INTEGER)
-	SELECT COUNT(DISTINCT t.titolo) 
-    FROM traccia t, collezione c, copia cp, disco d, artista a
-    WHERE c.visibilita = "pubblica" 
-		AND ID_artista = a.ID 
-		AND a.ID = d.ID_autore 
-        AND d.ID = cp.ID_disco 
-        AND c.ID = cp.ID_collezione 
-        AND t.ID_disco = d.ID;
+BEGIN
+	SELECT COUNT(DISTINCT t.titolo) as numero_brani
+    FROM artista a
+		JOIN disco d ON (a.ID = d.ID_autore)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN traccia t ON (d.ID = t.ID_disco)
+    WHERE c.visibilita = "pubblica" AND ID_artista = a.ID;
+END$
+DELIMITER ;
 
 CALL num_tracce_artista(3);
     

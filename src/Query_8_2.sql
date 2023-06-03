@@ -6,13 +6,14 @@
 -- sulle collezioni private, condivise e pubbliche)
 
 -- Ricerca di dischi in base al titolo
-DELIMITER $$
 DROP PROCEDURE IF EXISTS dischi_per_titolo;
+DELIMITER $
 CREATE PROCEDURE dischi_per_titolo (titolo VARCHAR(50))
 BEGIN
 	SELECT a.nome as artista, d.titolo, d.formato, d.barcode
     FROM disco as d, artista as a
     WHERE d.titolo = titolo AND d.ID_autore = a.ID;
-END;
+END$
+DELIMITER ;
 
 CALL dischi_per_titolo("HEROES & VILLAINS");

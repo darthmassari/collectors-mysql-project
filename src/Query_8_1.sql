@@ -6,13 +6,14 @@
 -- sulle collezioni private, condivise e pubbliche)
 
 -- Ricerca di dischi in base a nomi di autori/compositori/interpreti
-DELIMITER $$
 DROP PROCEDURE IF EXISTS dischi_per_artista;
+DELIMITER $
 CREATE PROCEDURE dischi_per_artista (nome VARCHAR(50))
 BEGIN
-		SELECT a.nome as artista, a.tipo, d.titolo, d.formato, d.barcode
-        FROM disco as d, artista as a 
+		SELECT a.nome AS artista, a.tipo, d.titolo, d.formato, d.barcode
+        FROM disco d, artista a 
         WHERE a.nome = nome AND d.ID_autore = a.ID;
-END;
+END$
+DELIMITER ;
 	
 CALL dischi_per_artista("Metro Boomin");
