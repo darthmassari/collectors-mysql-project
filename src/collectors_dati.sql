@@ -44,12 +44,21 @@ VALUES (1, 1, "My Collection", "pubblica");
 INSERT INTO collezione (ID, ID_collezionista, nome)
 VALUES (2, 2, "Collezione Bianchi");
 
+INSERT INTO collezione (ID, ID_collezionista, nome, visibilita)
+VALUES (3, 3, "Collezione Francesco", "privata");
+
 
 INSERT INTO condivisione (ID_collezionista, ID_collezione)
-VALUES (3, 1);
+VALUES (3, 2);
 
 INSERT INTO condivisione (ID_collezionista, ID_collezione)
 VALUES (1, 2);
+
+INSERT INTO condivisione (ID_collezionista, ID_collezione)
+VALUES (1, 3);
+
+INSERT INTO condivisione (ID_collezionista, ID_collezione)
+VALUES (2, 3);
 
 
 INSERT INTO disco (ID, ID_autore, titolo, formato)
@@ -67,6 +76,9 @@ VALUES (4, 3, "HEROES & VILLAINS", "Digitale", "561795468941");
 INSERT INTO disco (ID, ID_autore, titolo, formato)
 VALUES (5, 4, "Meteora", "CD");
 
+INSERT INTO disco (ID, ID_autore, titolo, formato)
+VALUES (6, 4, "Hybrid Theory", "Vinile");
+
 
 INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
 VALUES (1, 1, 3, "Buono");
@@ -80,21 +92,42 @@ VALUES (2, 4, "n/a");
 INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
 VALUES (2, 5, 2, "Nuovo");
 
+INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
+VALUES (3, 6, 3, "Buono");
+
+INSERT INTO copia (ID_collezione, ID_disco, stato)
+VALUES (3, 6, "Come nuovo");
+
+INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
+VALUES (3, 4, 2, "Come nuovo");
+
 
 INSERT INTO immagine (ID, ID_disco, path, etichetta)
 VALUES (1, 4, "/home/user/pictures/heroes-and-villains.png", "Copertina");
 
+INSERT INTO immagine (ID, ID_disco, path, etichetta)
+VALUES (2, 4, "/home/user/pictures/heroes-and-villains-retro.png", "Retro");
+
+INSERT INTO immagine (ID, ID_disco, path, etichetta)
+VALUES (3, 6, "/home/user/pictures/hybrid-theory.jpg", "Copertina");
+
 
 INSERT INTO info_disco (ID_disco, genere, descrizione, etichetta, anno)
-VALUES (2, "Hip-Hop", "808s & Heartbreak è il quarto album 
-	in studio del rapper statunitense Kanye West, pubblicato il 
-    24 novembre 2008 dall'etichetta discografica Roc-A-Fella Records", "Roc-A-Fella Records", 2008);
+VALUES (2, "Hip-Hop", 
+	"808s & Heartbreak è il quarto album in studio del rapper statunitense Kanye West, pubblicato il 24 novembre 2008 dall'etichetta discografica Roc-A-Fella Records", 
+	"Roc-A-Fella Records", 2008);
 
 INSERT INTO info_disco (ID_disco, genere, etichetta, anno)
-VALUES (4, "Hip-Hop", "Boominati", 2022);
+VALUES (3, "Hip-Hop", "GOOD Music", 2009);
+
+INSERT INTO info_disco (ID_disco, genere, etichetta, anno)
+VALUES (4, "Pop", "Boominati", 2022);
 
 INSERT INTO info_disco (ID_disco, genere, anno)
 VALUES (5, "Rock", 2003);
+
+INSERT INTO info_disco (ID_disco, genere, etichetta, anno)
+VALUES (6, "Rock", "Warner Bros. Records", 2000);
 
 
 INSERT INTO traccia (ID, ID_disco, numero, titolo, durata)
@@ -105,6 +138,18 @@ VALUES (2, 5, 13, "Numb");
 
 INSERT INTO traccia (ID, ID_disco, numero, titolo, durata)
 VALUES (3, 4, 10, "Creepin'", "00:03:41");
+
+INSERT INTO traccia (ID, ID_disco, numero, titolo, durata)
+VALUES (4, 4, 2, "Superhero", "00:03:02");
+
+INSERT INTO traccia (ID, ID_disco, numero, titolo, durata)
+VALUES (5, 4, 7, "Around Me", "00:03:11");
+
+INSERT INTO traccia (ID, ID_disco, numero, titolo)
+VALUES (6, 6, 2, "One Step Closer");
+
+INSERT INTO traccia (ID, ID_disco, numero, titolo, durata)
+VALUES (7, 6, 8, "In The End", "00:03:36");
 
 
 INSERT INTO collaborazione (ID_artista, ID_traccia)
