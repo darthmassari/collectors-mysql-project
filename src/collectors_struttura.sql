@@ -54,7 +54,7 @@ CREATE TABLE disco (
 CREATE TABLE copia (
     ID_collezione INTEGER UNSIGNED NOT NULL,
     ID_disco INTEGER UNSIGNED NOT NULL,
-    quantita SMALLINT NOT NULL DEFAULT 1,
+    quantita SMALLINT UNSIGNED NOT NULL DEFAULT 1,
     stato VARCHAR(50) NOT NULL,
     CONSTRAINT disco_stato_unico UNIQUE (ID_collezione , ID_disco , stato),
     CONSTRAINT stati_conservazione CHECK (stato IN ('Nuovo' , 'Come nuovo', 'Buono', 'Pessimo', 'n/a')),
@@ -103,7 +103,7 @@ CREATE TABLE info_disco (
 CREATE TABLE traccia (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     ID_disco INTEGER UNSIGNED NOT NULL,
-    numero TINYINT NOT NULL,
+    numero TINYINT UNSIGNED NOT NULL,
     titolo VARCHAR(50) NOT NULL,
     durata TIME,
     CONSTRAINT controllo_durata CHECK (durata < '00:30:00'),
