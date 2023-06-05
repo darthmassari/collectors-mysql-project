@@ -4,20 +4,33 @@
 
 | Matricola | Nome  |             Cognome             | Contributo al progetto |
 |:---------:|:-----:|:-------------------------------:|:----------------------:|
-|  271744   | Marco |             Ciucci              |                        | 
+|  271744   | Marco |             Ciucci              |          100%          | 
 
 **Data di consegna del progetto**: gg/mm/aaaa
 
 ## Analisi dei requisiti
 
-- E' possibile riportare in questa sezione i **requisiti **copiati dal documento di specifica, oppure semplicemente riassumerne gli aspetti più importanti.
-  Vanno quindi (eventualmente) discusse tutte le scelte progettuali relative al dominio, le ambiguità e il modo in cui sono state risolte.
-
+- Vanno (eventualmente) discusse tutte le scelte progettuali relative al dominio, le ambiguità e il modo in cui sono state risolte.
 - E' possibile infine inserire qui un glossario che riporta tutti gli oggetti di dominio individuati, con la loro semantica, i loro eventuali sinonimi e le loro proprietà.
+
+
+- Registrazione di dati relativi ai collezionisti, alle loro collezioni di dischi (ogni collezionista può creare più collezioni). 
+- Per ogni disco in una collezione, dovranno essere specificati gli autori, il titolo, l'anno di uscita, l'etichetta discografica, il genere musicale (scelto da una lista predefinita), lo stato di conservazione (scelto da una lista predefinita), il formato, il barcode, se disponibile (i codici a barre garantiscono l'identificazione univoca dell'elemento)
+- Lista delle tracce, ciascuna con titolo, durata, ed compositore ed esecutore, se diverso da quelli dell'intero disco. 
+- Ogni disco può essere associato a una o più immagini (copertina, retro, eventuali facciate interne o libretti, ecc.).
+- Per ogni disco, il collezionista potrà inoltre indicare l'eventuale numero di doppioni a sua disposizione.
+- I collezionisti possono decidere di condividere la propria collezione con specifici utenti o in maniera pubblica.
 
 ## Progettazione concettuale
 
-- Riportate qui il **modello ER iniziale**. Cercate di renderlo *leggibile*, altrimenti correggerlo diventerà impossibile. Se è troppo piccolo, dividetelo in parti e/o allegate anche un'immagine ad alta risoluzione alla relazione.
+<img src="design/Collectors_ER.png" style="margin-left: 13px">
+
+- Copia (stato, quantita)
+- Chiavi
+- Visibilita
+- Generalizzazione
+- Collaborazione
+
 
 - Commentate gli elementi non visibili nella figura (ad esempio il contenuto degli attributi composti) nonché le scelte/assunzioni che vi hanno portato a creare determinate strutture, se lo ritenete opportuno.
 
@@ -29,15 +42,32 @@
 
 ### Ristrutturazione ed ottimizzazione del modello ER
 
-- Riportate qui il modello **ER ristrutturato** ed eventualmente ottimizzato.
+<img src="design/Collectors_ER_Ristrutturato.png" style="margin-left: 13px">
+
+- Tipo artista
+- Info_Disco
+- Immagine (path)
+
 
 - Discutete le scelte effettuate, ad esempio nell'eliminare una generalizzazione o nello scindere un'entità.
 
 ### Traduzione del modello ER nel modello relazionale
 
-- Riportate qui il **modello relazionale** finale, derivato dal modello ER ristrutturato della sezione precedente e che verrà implementato in SQL in quella successiva.
+* **Collezionista** (**<ins>ID</ins>**, nickname, email) <br>
+* **Collezione** (**<ins>ID</ins>**, <ins>ID_collezionista</ins>, nome, visibilità) <br>
+* **Condivisione** (<ins>ID_collezionista</ins>, <ins>ID_collezione</ins>) <br>
+* **Artista** (**<ins>ID</ins>**, nome, tipo) <br>
+* **Disco** (**<ins>ID</ins>**, <ins>ID_autore</ins>, titolo, formato, barcode) <br>
+* **Copia** (<ins>ID_collezione</ins>, <ins>ID_disco</ins>, stato, quantità) <br>
+* **Immagine** (**<ins>ID</ins>**, <ins>ID_disco</ins>, path, etichetta) <br>
+* **Info_Disco** (<ins>ID_disco</ins>, genere, descrizione, etichetta, anno, anteprima) <br>
+* **Traccia** (**<ins>ID</ins>**, <ins>ID_disco</ins>, numero, titolo, durata) <br>
+* **Collaborazione** (<ins>ID_artista</ins>, <ins>ID_traccia</ins>)
 
-- Nel modello evidenziate le chiavi primarie e le chiavi esterne.
+|      Attributo       |   Significato   |
+|:--------------------:|:---------------:|
+|  **<ins>ID</ins>**   | Chiave primaria | 
+| <ins>ID_entità</ins> | Chiave esterna  |
 
 ## Progettazione fisica
 

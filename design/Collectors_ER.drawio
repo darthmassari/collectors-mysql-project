@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2023-05-29T19:01:30.749Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="6mKWhZKDqCLesQ0JmrPZ" version="21.2.8" type="device">
+<mxfile host="Electron" modified="2023-06-05T10:39:03.129Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="Zh7ynTDedty62A11F5wC" version="21.2.8" type="device">
   <diagram name="Page-1" id="mOuxxqlsxClfAwubohgY">
-    <mxGraphModel dx="880" dy="526" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1114" dy="1198" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -409,6 +409,15 @@
         <mxCell id="aDQZIw9n2Cmun58OzOLv-120" value="(0, n)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="aDQZIw9n2Cmun58OzOLv-111" vertex="1" connectable="0">
           <mxGeometry x="-0.4936" y="1" relative="1" as="geometry">
             <mxPoint x="-22" y="4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pgS3mpEG4ywZ8LMO0lSc-1" value="quantita" style="ellipse;whiteSpace=wrap;html=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="630" y="175" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pgS3mpEG4ywZ8LMO0lSc-2" value="" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="aDQZIw9n2Cmun58OzOLv-26" target="pgS3mpEG4ywZ8LMO0lSc-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="205" as="sourcePoint" />
+            <mxPoint x="530" y="205" as="targetPoint" />
           </mxGeometry>
         </mxCell>
       </root>
