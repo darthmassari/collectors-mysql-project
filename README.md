@@ -21,6 +21,8 @@
 - Per ogni disco, il collezionista potrà inoltre indicare l'eventuale numero di doppioni a sua disposizione.
 - I collezionisti possono decidere di condividere la propria collezione con specifici utenti o in maniera pubblica.
 
+
+- 
 ## Progettazione concettuale
 
 <img src="design/Collectors_ER.png" style="margin-left: 13px">

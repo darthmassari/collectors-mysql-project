@@ -5,6 +5,6 @@ BEGIN
 	SELECT a.nome as artista, d.titolo, d.formato, d.barcode
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-    WHERE d.titolo = titolo;
+    WHERE d.titolo LIKE CONCAT('%', titolo, '%');
 END$
 DELIMITER ;

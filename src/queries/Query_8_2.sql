@@ -6,4 +6,4 @@
 -- sulle collezioni private, condivise e pubbliche)
 
 -- Ricerca di dischi in base al titolo
-CALL dischi_per_titolo("HEROES & VILLAINS");
+CALL dischi_per_titolo("HEROES");

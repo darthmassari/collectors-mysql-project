@@ -14,7 +14,7 @@ CREATE TABLE collezione (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     ID_collezionista INTEGER UNSIGNED NOT NULL,
     nome VARCHAR(50) NOT NULL UNIQUE,
-    visibilita ENUM('privata', 'pubblica') NOT NULL DEFAULT 'privata',
+    visibilita ENUM('Privata', 'Pubblica') NOT NULL DEFAULT 'Privata',
     CONSTRAINT proprietario_collezione FOREIGN KEY (ID_collezionista)
         REFERENCES collezionista (ID)
         ON DELETE CASCADE ON UPDATE CASCADE
@@ -35,7 +35,7 @@ CREATE TABLE condivisione (
 CREATE TABLE artista (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL UNIQUE,
-    tipo ENUM('esecutore', 'compositore') NOT NULL
+    tipo ENUM('Esecutore', 'Compositore') NOT NULL
 );
 
 CREATE TABLE disco (
