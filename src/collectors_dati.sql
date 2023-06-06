@@ -99,7 +99,7 @@ INSERT INTO copia (ID_collezione, ID_disco, stato)
 VALUES (3, 6, "Come nuovo");
 
 INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
-VALUES (3, 4, 2, "Come nuovo");
+VALUES (3, 3, 2, "Come nuovo");
 
 
 INSERT INTO immagine (ID, ID_disco, path, etichetta)

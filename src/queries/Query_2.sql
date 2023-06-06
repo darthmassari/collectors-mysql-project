@@ -1,6 +1,6 @@
 -- 2. Aggiunta di dischi a una collezione e di tracce a un disco
 
-SELECT AGGIUNGI_DISCO (4, 4, 'Nuovo', 2, "Passion, Pain & Demon Slayin'", 'CD', '82156179', 'Hip-Hop', 
+SELECT AGGIUNGI_DISCO (4, 4, 'Nuovo', 2, "Passion, Pain & Demon Slayin'", 'CD', '878193179', 'Hip-Hop', 
 	"Passion, Pain & Demon Slayin' è il sesto album in studio del rapper e cantante statunitense Kid Cudi",
 	'Wicked Awesome', 2016, NULL);
    
