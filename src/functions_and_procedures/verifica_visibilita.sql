@@ -13,7 +13,7 @@ BEGIN
 		SELECT collezione.nome, collezione.visibilita
 		FROM collezione
 		WHERE ID_collezione = collezione.ID 
-			AND collezione.visibilita = 'pubblica'
+			AND collezione.visibilita = 'Pubblica'
 	)
 	UNION
 	(

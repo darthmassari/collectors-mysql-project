@@ -13,8 +13,9 @@ CREATE TABLE collezionista (
 CREATE TABLE collezione (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     ID_collezionista INTEGER UNSIGNED NOT NULL,
-    nome VARCHAR(50) NOT NULL UNIQUE,
-    visibilita ENUM('privata', 'pubblica') NOT NULL DEFAULT 'privata',
+    nome VARCHAR(50) NOT NULL,
+    visibilita ENUM('Privata', 'Pubblica') NOT NULL DEFAULT 'Privata',
+    CONSTRAINT collezione_unica UNIQUE (ID_collezionista, nome),
     CONSTRAINT proprietario_collezione FOREIGN KEY (ID_collezionista)
         REFERENCES collezionista (ID)
         ON DELETE CASCADE ON UPDATE CASCADE
@@ -35,7 +36,7 @@ CREATE TABLE condivisione (
 CREATE TABLE artista (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL UNIQUE,
-    tipo ENUM('esecutore', 'compositore') NOT NULL
+    tipo ENUM('Esecutore', 'Compositore') NOT NULL
 );
 
 CREATE TABLE disco (
@@ -43,9 +44,9 @@ CREATE TABLE disco (
     ID_autore INTEGER UNSIGNED NOT NULL,
     titolo VARCHAR(50) NOT NULL,
     formato VARCHAR(50) NOT NULL,
-    barcode VARCHAR(12),
+    barcode VARCHAR(12) UNIQUE,
     CONSTRAINT formati CHECK (formato IN ('Vinile' , 'CD', 'Digitale', 'Musicassetta')),
-    CONSTRAINT disco_unico UNIQUE (ID_autore , titolo , barcode),
+    CONSTRAINT disco_unico UNIQUE (ID_autore , titolo),
     CONSTRAINT autore_disco FOREIGN KEY (ID_autore)
         REFERENCES artista (ID)
         ON DELETE NO ACTION ON UPDATE CASCADE

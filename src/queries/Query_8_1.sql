@@ -6,4 +6,4 @@
 -- sulle collezioni private, condivise e pubbliche)
 
 -- Ricerca di dischi in base a nomi di autori/compositori/interpreti	
-CALL dischi_per_artista("Metro Boomin");
+CALL dischi_per_artista("Kanye", 3);

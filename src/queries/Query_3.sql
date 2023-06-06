@@ -1,13 +1,14 @@
 -- 3. Modifica dello stato di pubblicazione di una collezione 
 -- (da privata a pubblica e viceversa) e aggiunta di nuove condivisioni a una collezione
 
+-- modifica dello stato di pubblicazione da privata a pubblica
 UPDATE collezione 
-SET visibilita = 'pubblica'
+SET visibilita = 'Pubblica'
 WHERE ID = 3;
 
--- modifica stato della pubblicazione di una collezione da pubblica a privata
+-- modifica dello stato di pubblicazione da pubblica a privata
 UPDATE collezione 
-SET visibilita = 'privata'
+SET visibilita = 'Privata'
 WHERE ID = 1;
 -- oppure
 UPDATE collezione 

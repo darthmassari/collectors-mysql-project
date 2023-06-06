@@ -13,19 +13,19 @@ DELETE FROM traccia;
 
 
 INSERT INTO artista (ID, nome, tipo)
-VALUES (1, "Kanye West", "esecutore");
+VALUES (1, "Kanye West", "Esecutore");
 
 INSERT INTO artista (ID, nome, tipo)
-VALUES (2, "Kid Cudi", "esecutore");
+VALUES (2, "Kid Cudi", "Esecutore");
 
 INSERT INTO artista (ID, nome, tipo)
-VALUES (3, "Metro Boomin", "compositore");
+VALUES (3, "Metro Boomin", "Compositore");
 
 INSERT INTO artista (ID, nome, tipo)
-VALUES (4, "Linkin Park", "esecutore");
+VALUES (4, "Linkin Park", "Esecutore");
 
 INSERT INTO artista (ID, nome, tipo)
-VALUES (5, "The Weeknd", "esecutore");
+VALUES (5, "The Weeknd", "Esecutore");
 
 
 INSERT INTO collezionista (ID, nickname, email)
@@ -39,13 +39,13 @@ VALUES (3, "francescoverdi", "francescoverdi@univaq.it");
 
 
 INSERT INTO collezione (ID, ID_collezionista, nome, visibilita)
-VALUES (1, 1, "My Collection", "pubblica");
+VALUES (1, 1, "My Collection", "Pubblica");
 
 INSERT INTO collezione (ID, ID_collezionista, nome)
 VALUES (2, 2, "Collezione Bianchi");
 
 INSERT INTO collezione (ID, ID_collezionista, nome, visibilita)
-VALUES (3, 3, "Collezione Francesco", "privata");
+VALUES (3, 3, "Collezione Francesco", "Privata");
 
 
 INSERT INTO condivisione (ID_collezionista, ID_collezione)
@@ -99,7 +99,7 @@ INSERT INTO copia (ID_collezione, ID_disco, stato)
 VALUES (3, 6, "Come nuovo");
 
 INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
-VALUES (3, 4, 2, "Come nuovo");
+VALUES (3, 3, 2, "Come nuovo");
 
 
 INSERT INTO immagine (ID, ID_disco, path, etichetta)
