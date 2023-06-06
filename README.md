@@ -76,7 +76,7 @@
 ### Implementazione del modello relazionale
 
 - Per la creazione ed il popolamento del database, utilizzare gli script [struttura](src/collectors_struttura.sql) e [dati](src/collectors_dati.sql)
-- Alternativamente si può utilizzare il [file di dump](src/dump/collectors_dump.sql), il quale contiene tuti i dati e le funzioni/procedure utilizzate in seguito.
+- Alternativamente si può utilizzare il [file di dump](src/dump/collectors_dump.sql), il quale contiene tuti i dati e triggers/funzioni/procedure utilizzati in seguito.
 
 ### Implementazione dei vincoli
 
@@ -108,7 +108,7 @@ DELIMITER ;
 ```
 [Query](src/queries/Query_1.sql) di esempio
 ```sql
-SELECT AGGIUNGI_COLLEZIONE(3, 'Collezione Hip-Hop', 'privata');
+SELECT AGGIUNGI_COLLEZIONE(3, 'Collezione Hip-Hop', 'Privata');
 ```
 
 #### Funzionalità 2
@@ -161,7 +161,7 @@ DELIMITER ;
 ```
 [Query](src/queries/Query_2.sql) di esempio
 ```sql
-SELECT AGGIUNGI_DISCO (4, 4, 'Nuovo', 2, "Passion, Pain & Demon Slayin'", 'CD', '82156179', 'Hip-Hop', 
+SELECT AGGIUNGI_DISCO (4, 4, 'Nuovo', 2, "Passion, Pain & Demon Slayin'", 'CD', '878193179', 'Hip-Hop', 
 	"Passion, Pain & Demon Slayin' è il sesto album in studio del rapper e cantante statunitense Kid Cudi",
 	'Wicked Awesome', 2016, NULL);
    
@@ -177,12 +177,12 @@ SELECT AGGIUNGI_TRACCIA (7, 8, 'Baptized In Fire', '00:04:45');
 ```sql
 -- modifica dello stato di pubblicazione da privata a pubblica
 UPDATE collezione 
-SET visibilita = 'pubblica'
+SET visibilita = 'Pubblica'
 WHERE ID = 3;
 
 -- modifica dello stato di pubblicazione da pubblica a privata
 UPDATE collezione 
-SET visibilita = 'privata'
+SET visibilita = 'Privata'
 WHERE ID = 1;
 -- oppure
 UPDATE collezione 
@@ -211,7 +211,19 @@ WHERE ID = 5;
 
 > Rimozione di una collezione
 
-[Query](src/queries/Query_5.sql)
+[Trigger](src/functions_and_procedures/safe_delete_collezione.sql) per la rimozione di tutti i dischi relativi ad una collezione
+```sql
+DROP TRIGGER IF EXISTS safe_delete_collezione;
+DELIMITER $
+CREATE TRIGGER safe_delete_collezione BEFORE DELETE ON collezione FOR EACH ROW
+BEGIN
+	DELETE disco, copia 
+    FROM disco 
+		JOIN copia ON (OLD.ID = copia.ID_collezione AND disco.ID = copia.ID_disco);
+END$
+DELIMITER ;
+```
+[Query](src/queries/Query_5.sql) di esempio
 ```sql
 DELETE FROM collezione 
 WHERE ID = 4;
@@ -271,36 +283,90 @@ CALL tracklist_disco (4);
 ```sql
 DROP PROCEDURE IF EXISTS dischi_per_artista;
 DELIMITER $
-CREATE PROCEDURE dischi_per_artista (nome VARCHAR(50))
+CREATE PROCEDURE dischi_per_artista (nome VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
-	SELECT a.nome AS artista, a.tipo, d.titolo, d.formato, d.barcode
-	FROM disco d
-		JOIN artista a ON (d.ID_autore = a.ID)
-    WHERE a.nome = nome;
+	(
+		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+		FROM artista a
+			JOIN disco d ON (a.ID = d.ID_autore)
+            JOIN copia cp ON (d.ID = cp.ID_disco)
+            JOIN collezione c ON (cp.ID_collezione = c.ID)
+		WHERE c.visibilita = 'Pubblica' AND a.nome LIKE CONCAT ('%', nome, '%')
+	)
+    UNION
+    (
+		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+		FROM artista a
+			JOIN disco d ON (a.ID = d.ID_autore)
+            JOIN copia cp ON (d.ID = cp.ID_disco)
+            JOIN collezione c ON (cp.ID_collezione = c.ID)
+		WHERE _ID_collezionista IS NOT NULL 
+			AND c.ID_collezionista = _ID_collezionista 
+            AND a.nome LIKE CONCAT ('%', nome, '%')
+	)
+    UNION
+    (
+		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, "Condivisa con te" AS visibilita  
+		FROM artista a
+			JOIN disco d ON (a.ID = d.ID_autore)
+            JOIN copia cp ON (d.ID = cp.ID_disco)
+            JOIN collezione c ON (cp.ID_collezione = c.ID)
+            JOIN condivisione con ON (c.ID = con.ID_collezione)
+		WHERE _ID_collezionista IS NOT NULL 
+			AND con.ID_collezionista = _ID_collezionista 
+            AND a.nome LIKE CONCAT ('%', nome, '%')
+	);
 END$
 DELIMITER ;
 ```
 [Query](src/queries/Query_8_1.sql) di esempio
 ```sql
-CALL dischi_per_artista("Metro Boomin");
+CALL dischi_per_artista("Kanye", 3);
 ```
 
 [Procedura](src/functions_and_procedures/dischi_per_titolo.sql) per la ricerca di dischi in base al titolo
 ```sql
 DROP PROCEDURE IF EXISTS dischi_per_titolo;
 DELIMITER $
-CREATE PROCEDURE dischi_per_titolo (titolo VARCHAR(50))
+CREATE PROCEDURE dischi_per_titolo (titolo VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
-	SELECT a.nome as artista, d.titolo, d.formato, d.barcode
+	(
+	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, c.visibilita
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-    WHERE d.titolo = titolo;
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+    WHERE c.visibilita = 'Pubblica' AND d.titolo LIKE CONCAT('%', titolo, '%')
+    )
+    UNION
+    (
+	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, c.visibilita
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+    WHERE _ID_collezionista IS NOT NULL 
+		AND c.ID_collezionista = _ID_collezionista 
+        AND d.titolo LIKE CONCAT('%', titolo, '%')
+    )
+    UNION
+    (
+	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN condivisione con ON (c.ID = con.ID_collezione)
+    WHERE _ID_collezionista IS NOT NULL 
+		AND con.ID_collezionista = _ID_collezionista 
+		AND d.titolo LIKE CONCAT('%', titolo, '%')
+    );
 END$
 DELIMITER ;
 ```
 [Query](src/queries/Query_8_2.sql) di esempio
 ```sql
-CALL dischi_per_titolo("HEROES & VILLAINS");
+CALL dischi_per_titolo("808", 1);
 ```
 
 #### Funzionalità 9
@@ -324,7 +390,7 @@ BEGIN
 		SELECT collezione.nome, collezione.visibilita
 		FROM collezione
 		WHERE ID_collezione = collezione.ID 
-			AND collezione.visibilita = 'pubblica'
+			AND collezione.visibilita = 'Pubblica'
 	)
 	UNION
 	(
@@ -359,7 +425,7 @@ BEGIN
         JOIN copia cp ON (d.ID = cp.ID_disco)
         JOIN collezione c ON (cp.ID_collezione = c.ID)
         JOIN traccia t ON (d.ID = t.ID_disco)
-    WHERE c.visibilita = 'pubblica' AND ID_artista = a.ID
+    WHERE c.visibilita = 'Pubblica' AND ID_artista = a.ID
     GROUP BY a.nome;
 END$
 DELIMITER ;
@@ -379,14 +445,24 @@ DROP PROCEDURE IF EXISTS minuti_artista;
 DELIMITER $
 CREATE PROCEDURE minuti_artista (ID_artista INTEGER)
 BEGIN
-	SELECT a.nome, SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata))) as minuti_totali
+	SELECT a.nome,
+	(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata)))
     FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (cp.ID_collezione = c.ID AND c.visibilita = 'Pubblica')
         JOIN traccia t ON (d.ID = t.ID_disco)
-    WHERE c.visibilita = 'pubblica' AND ID_artista = a.ID
-    GROUP BY a.nome;
+    ) AS minuti,
+    (SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata)))
+    FROM artista a
+		JOIN collaborazione col ON (a.ID = col.ID_artista)
+        JOIN traccia t ON (col.ID_artista = t.ID)
+        JOIN disco d ON (t.ID_disco = d.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID AND c.visibilita = 'Pubblica')
+	) AS minuti_featuring
+    FROM artista a
+    WHERE ID_artista = a.ID; 
 END$
 DELIMITER ;
 ```
@@ -399,19 +475,31 @@ CALL minuti_artista(3);
 
 > Statistiche (una query per ciascun valore): numero di collezioni di ciascun collezionista, numero di dischi per genere nel sistema.
 
-[Query](src/queries/Query_12_1.sql) per il numero di collezioni di ciascun collezionista
+[Vista](src/views/num_collezioni_collezionisti.sql) per il numero di collezioni di ciascun collezionista
 ```sql
-SELECT p.nickname, COUNT(*)
+CREATE VIEW num_collezioni_collezionisti AS
+SELECT p.nickname, COUNT(*) AS numero_collezioni
 FROM collezionista p
 	JOIN collezione c ON (p.ID = c.ID_collezionista)
 GROUP BY p.nickname;
 ```
-[Query](src/queries/Query_12_2.sql) per il numero di dischi per genere
+[Query](src/queries/Query_12_1.sql) di esempio
 ```sql
-SELECT info.genere, COUNT(*)
+SELECT * 
+FROM num_collezioni_collezionisti;
+```
+[Vista](src/views/num_dischi_generi.sql) per il numero di dischi per genere
+```sql
+CREATE VIEW num_dischi_generi AS
+SELECT info.genere, COUNT(*) AS numero_dischi
 FROM info_disco info
 	RIGHT JOIN disco d ON (d.ID = info.ID_disco)
 GROUP BY info.genere;
+```
+[Query](src/queries/Query_12_2.sql) di esempio
+```sql
+SELECT *
+FROM num_dischi_generi;
 ```
 
 #### Funzionalità 13
