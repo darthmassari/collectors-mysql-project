@@ -1,4 +1,3 @@
 -- 4. Rimozione di un disco da una collezione
 
-DELETE FROM disco 
-WHERE ID = 5;
+SELECT ELIMINA_COPIA(1, 2, 'Come nuovo');

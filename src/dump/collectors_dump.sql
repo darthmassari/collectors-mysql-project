@@ -1,3 +1,5 @@
+CREATE DATABASE  IF NOT EXISTS `collectors` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `collectors`;
 -- MySQL dump 10.13  Distrib 8.0.33, for Linux (x86_64)
 --
 -- Host: localhost    Database: collectors
@@ -197,6 +199,25 @@ LOCK TABLES `copia` WRITE;
 INSERT INTO `copia` VALUES (1,1,3,'Buono'),(1,2,4,'Come nuovo'),(2,4,1,'n/a'),(2,5,2,'Nuovo'),(3,3,2,'Come nuovo'),(3,6,3,'Buono'),(3,6,1,'Come nuovo');
 /*!40000 ALTER TABLE `copia` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `safe_delete_disco` AFTER DELETE ON `copia` FOR EACH ROW BEGIN
+	DELETE FROM disco d
+    WHERE (SELECT COUNT(*) FROM copia cp WHERE cp.ID_disco = OLD.ID_disco) = 0
+		AND OLD.ID_disco = d.ID;		
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `disco`
@@ -289,6 +310,32 @@ INSERT INTO `info_disco` VALUES (2,'Hip-Hop','808s & Heartbreak è il quarto alb
 UNLOCK TABLES;
 
 --
+-- Temporary view structure for view `num_collezioni_collezionisti`
+--
+
+DROP TABLE IF EXISTS `num_collezioni_collezionisti`;
+/*!50001 DROP VIEW IF EXISTS `num_collezioni_collezionisti`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `num_collezioni_collezionisti` AS SELECT 
+ 1 AS `nickname`,
+ 1 AS `numero_collezioni`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `num_dischi_generi`
+--
+
+DROP TABLE IF EXISTS `num_dischi_generi`;
+/*!50001 DROP VIEW IF EXISTS `num_dischi_generi`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `num_dischi_generi` AS SELECT 
+ 1 AS `genere`,
+ 1 AS `numero_dischi`*/;
+SET character_set_client = @saved_cs_client;
+
+--
 -- Table structure for table `traccia`
 --
 
@@ -321,6 +368,40 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'collectors'
 --
+/*!50003 DROP FUNCTION IF EXISTS `aggiorna_visibilita` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `aggiorna_visibilita`(ID INTEGER UNSIGNED, nuova_visibilita VARCHAR(8)) RETURNS varchar(50) CHARSET utf8mb4
+    DETERMINISTIC
+BEGIN
+	IF (nuova_visibilita IS NOT NULL) THEN
+    BEGIN
+		UPDATE collezione c
+		SET c.visibilita = nuova_visibilita
+		WHERE c.ID = ID;
+	END;
+    ELSE
+    BEGIN
+		UPDATE collezione c
+        SET c.visibilita = 'Privata'
+        WHERE c.ID = ID;
+	END;
+    END IF;
+        
+    RETURN 'Collezione aggiornata';
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP FUNCTION IF EXISTS `aggiungi_collezione` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -400,6 +481,45 @@ BEGIN
     VALUES (ID_disco, numero, titolo, durata);
 	
     RETURN last_insert_id();
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `elimina_copia` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `elimina_copia`(_ID_collezione INTEGER UNSIGNED, _ID_disco INTEGER UNSIGNED, _stato VARCHAR(50)) RETURNS varchar(50) CHARSET utf8mb4
+    DETERMINISTIC
+BEGIN
+	IF ((SELECT cp.quantita FROM copia cp 
+        WHERE cp.ID_collezione = _ID_collezione
+			AND cp.ID_disco = _ID_disco
+			AND cp.stato = _stato) > 1) THEN
+	BEGIN
+		UPDATE copia cp
+		SET cp.quantita = cp.quantita - 1
+		WHERE cp.ID_collezione = _ID_collezione
+			AND cp.ID_disco = _ID_disco
+            AND cp.stato = _stato;
+	END;
+    ELSE
+	BEGIN
+		DELETE FROM copia cp
+        WHERE cp.ID_collezione = _ID_collezione 
+			AND cp.ID_disco = _ID_disco
+            AND cp.stato = _stato;
+	END;
+    END IF;
+    RETURN "Copia eliminata";
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -652,6 +772,42 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Final view structure for view `num_collezioni_collezionisti`
+--
+
+/*!50001 DROP VIEW IF EXISTS `num_collezioni_collezionisti`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `num_collezioni_collezionisti` AS select `p`.`nickname` AS `nickname`,count(0) AS `numero_collezioni` from (`collezionista` `p` join `collezione` `c` on((`p`.`ID` = `c`.`ID_collezionista`))) group by `p`.`nickname` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `num_dischi_generi`
+--
+
+/*!50001 DROP VIEW IF EXISTS `num_dischi_generi`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `num_dischi_generi` AS select `info`.`genere` AS `genere`,count(0) AS `numero_dischi` from (`disco` `d` left join `info_disco` `info` on((`d`.`ID` = `info`.`ID_disco`))) group by `info`.`genere` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -662,4 +818,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-06-06 19:26:26
+-- Dump completed on 2023-06-07 17:00:36
