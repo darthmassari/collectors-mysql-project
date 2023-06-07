@@ -46,12 +46,11 @@
 
 <img src="design/Collectors_ER_Ristrutturato.png" style="margin-left: 13px">
 
-- Tipo artista
-- Info_Disco
-- Immagine (path)
-
-
-- Discutete le scelte effettuate, ad esempio nell'eliminare una generalizzazione o nello scindere un'entità.
+- Per la generalizzazione dell'artista (Esecutore/Compositore) è stata effettuata una *fusione figli-genitore*, in quanto nel database queste due entità non vengono mai trattate separatamente, si è quindi introdotto l'attributo discriminante *Tipo*
+- Per allegerire l'entità *Disco*, sono state introdotte le entità
+	- *Info_disco*, che contiene tutti gli attributi secondari
+	- *Immagine*, che deriva dalla decomposizione dell'attributo multivalore omonimo, nella quale è possibile specificare il path e l'etichetta di un'immagine
+- È stato introdotto l'attributo anteprima, questo perchè raramente viene visualizzato un disco senza la sua immagine di copertina
 
 ### Traduzione del modello ER nel modello relazionale
 
@@ -81,12 +80,9 @@
 ### Implementazione dei vincoli
 
 - Nel caso abbiate individuato dei **vincoli ulteriori** che non sono esprimibili nel DDL, potrete usare questa sezione per discuterne l'implementazione effettiva, ad esempio riportando il codice di procedure o trigger, o dichiarando che dovranno essere implementati all'esterno del DBMS.
+- Triggers
 
 ### Implementazione funzionalità richieste
-
-- Riportate qui il **codice che implementa tutte le funzionalità richieste**, che si tratti di SQL o di pseudocodice o di entrambi. *Il codice di ciascuna funzionalità dovrà essere preceduto dal suo numero identificativo e dal testo della sua definizione*, come riportato nella specifica.
-
-- Se necessario, riportate anche il codice delle procedure e/o viste di supporto.
 
 #### Funzionalità 1
 
@@ -218,6 +214,7 @@ VALUES (3, 1);
 #### Funzionalità 4
 
 > Rimozione di un disco da una collezione
+
 [Funzione](src/functions_and_procedures/elimina_copia.sql) per la rimozione di una copia di un disco da una collezione.
 Se sono presenti più copie di uno stesso disco e con lo stesso stato di conservazione, viene decrementata la quantità.
 Se è presente una sola copia di un disco con un determinato stato di conservazione, viene eliminato il record dalla tabella.
@@ -574,10 +571,3 @@ CODICE
 ```sql
 CODICE
 ```
-
-## Interfaccia verso il database
-
-- Opzionalmente, se avete deciso di realizzare anche una **(semplice) interfaccia** (a linea di comando o grafica) in un linguaggio di programmazione a voi noto (Java, PHP, ...) che manipoli il vostro database , dichiaratelo in questa sezione, elencando
-  le tecnologie utilizzate e le funzionalità invocabili dall'interfaccia.
-
-- Il relativo codice sorgente dovrà essere *allegato *alla presente relazione.
