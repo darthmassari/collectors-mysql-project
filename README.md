@@ -76,7 +76,7 @@
 ### Implementazione del modello relazionale
 
 - Per la creazione ed il popolamento del database, utilizzare gli script [struttura](src/collectors_struttura.sql) e [dati](src/collectors_dati.sql)
-- Alternativamente si può utilizzare il [file di dump](src/dump/collectors_dump.sql), il quale contiene tuti i dati e triggers/funzioni/procedure utilizzati in seguito.
+- Alternativamente si può utilizzare il [file di dump](src/dump/collectors_dump.sql), il quale contiene tuti i dati e viste/triggers/funzioni/procedure utilizzati in seguito.
 
 ### Implementazione dei vincoli
 
@@ -173,21 +173,39 @@ SELECT AGGIUNGI_TRACCIA (7, 8, 'Baptized In Fire', '00:04:45');
 
 > Modifica dello stato di pubblicazione di una collezione (da privata a pubblica e viceversa) e aggiunta di nuove condivisioni a una collezione
 
+[Funzione](src/functions_and_procedures/aggiorna_visibilita.sql) per la modifica della visibilità di una collezione.
+Se non viene specificato alcun valore per visibilità, viene impostata su Privata
+```sql
+DROP FUNCTION IF EXISTS aggiorna_visibilita;
+DELIMITER $
+CREATE FUNCTION aggiorna_visibilita (ID INTEGER UNSIGNED, nuova_visibilita VARCHAR(8))
+RETURNS VARCHAR(50) DETERMINISTIC
+BEGIN
+	IF (nuova_visibilita IS NOT NULL) THEN
+    BEGIN
+		UPDATE collezione c
+		SET c.visibilita = nuova_visibilita
+		WHERE c.ID = ID;
+	END;
+    ELSE
+    BEGIN
+		UPDATE collezione c
+        SET c.visibilita = 'Privata'
+        WHERE c.ID = ID;
+	END;
+    END IF;
+
+    RETURN 'Collezione aggiornata';
+END$
+DELIMITER ;
+```
 [Query](src/queries/Query_3.sql)
 ```sql
 -- modifica dello stato di pubblicazione da privata a pubblica
-UPDATE collezione 
-SET visibilita = 'Pubblica'
-WHERE ID = 3;
+SELECT AGGIORNA_VISIBILITA(3, 'Pubblica');
 
 -- modifica dello stato di pubblicazione da pubblica a privata
-UPDATE collezione 
-SET visibilita = 'Privata'
-WHERE ID = 1;
--- oppure
-UPDATE collezione 
-SET visibilita = DEFAULT
-WHERE ID = 1;
+SELECT AGGIORNA_VISIBILITA(1, 'Privata');
 
 -- aggiunta di nuove condivisioni a una collezione
 INSERT INTO condivisione (ID_collezionista, ID_collezione)
@@ -200,18 +218,60 @@ VALUES (3, 1);
 #### Funzionalità 4
 
 > Rimozione di un disco da una collezione
-
-[Query](src/queries/Query_4.sql)
+[Funzione](src/functions_and_procedures/elimina_copia.sql) per la rimozione di una copia di un disco da una collezione.
+Se sono presenti più copie di uno stesso disco e con lo stesso stato di conservazione, viene decrementata la quantità.
+Se è presente una sola copia di un disco con un determinato stato di conservazione, viene eliminato il record dalla tabella.
 ```sql
-DELETE FROM disco 
-WHERE ID = 5;
+DROP FUNCTION IF EXISTS elimina_copia;
+DELIMITER $
+CREATE FUNCTION elimina_copia (_ID_collezione INTEGER UNSIGNED, _ID_disco INTEGER UNSIGNED, _stato VARCHAR(50))
+RETURNS VARCHAR(50) DETERMINISTIC
+BEGIN
+	IF ((SELECT cp.quantita FROM copia cp 
+        WHERE cp.ID_collezione = _ID_collezione
+			AND cp.ID_disco = _ID_disco
+			AND cp.stato = _stato) > 1) THEN
+	BEGIN
+		UPDATE copia cp
+		SET cp.quantita = cp.quantita - 1
+		WHERE cp.ID_collezione = _ID_collezione
+			AND cp.ID_disco = _ID_disco
+            AND cp.stato = _stato;
+	END;
+    ELSE
+	BEGIN
+		DELETE FROM copia cp
+        WHERE cp.ID_collezione = _ID_collezione 
+			AND cp.ID_disco = _ID_disco
+            AND cp.stato = _stato;
+	END;
+    END IF;
+    RETURN "Copia eliminata";
+END$
+DELIMITER ;
+```
+Quando non è più presente alcuna copia di un disco in una collezione, interviene il seguente [trigger](src/triggers/safe_delete_disco.sql), che elimina il disco dal database
+```sql
+DROP TRIGGER IF EXISTS safe_delete_disco;
+DELIMITER $
+CREATE TRIGGER safe_delete_disco AFTER DELETE ON copia FOR EACH ROW
+BEGIN
+	DELETE FROM disco d
+    WHERE (SELECT COUNT(*) FROM copia cp WHERE cp.ID_disco = OLD.ID_disco) = 0
+		AND OLD.ID_disco = d.ID;		
+END$
+DELIMITER ;
+```
+[Query](src/queries/Query_4.sql) di esempio
+```sql
+SELECT ELIMINA_COPIA(1, 2, 'Come nuovo');
 ```
 
 #### Funzionalità 5
 
 > Rimozione di una collezione
 
-[Trigger](src/functions_and_procedures/safe_delete_collezione.sql) per la rimozione di tutti i dischi relativi ad una collezione
+[Trigger](src/triggers/safe_delete_collezione.sql) per la rimozione di tutti i dischi relativi ad una collezione
 ```sql
 DROP TRIGGER IF EXISTS safe_delete_collezione;
 DELIMITER $
@@ -432,7 +492,7 @@ DELIMITER ;
 ```
 [Query](src/queries/Query_10.sql) di esempio
 ```sql
-CALL num_tracce_artista(3);
+CALL num_tracce_artista(1);
 ```
 
 #### Funzionalità 11
