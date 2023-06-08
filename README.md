@@ -15,30 +15,39 @@
 
 
 - Registrazione di dati relativi ai collezionisti, alle loro collezioni di dischi (ogni collezionista può creare più collezioni). 
-- Per ogni disco in una collezione, dovranno essere specificati gli autori, il titolo, l'anno di uscita, l'etichetta discografica, il genere musicale (scelto da una lista predefinita), lo stato di conservazione (scelto da una lista predefinita), il formato, il barcode, se disponibile (i codici a barre garantiscono l'identificazione univoca dell'elemento)
+- Per ogni disco in una collezione, dovranno essere specificati gli autori, il titolo, l'anno di uscita, l'etichetta discografica, il genere musicale, lo stato di conservazione (scelto da una lista predefinita), il formato, il barcode, se disponibile.
 - Lista delle tracce, ciascuna con titolo, durata, ed compositore ed esecutore, se diverso da quelli dell'intero disco. 
 - Ogni disco può essere associato a una o più immagini (copertina, retro, eventuali facciate interne o libretti, ecc.).
 - Per ogni disco, il collezionista potrà inoltre indicare l'eventuale numero di doppioni a sua disposizione.
 - I collezionisti possono decidere di condividere la propria collezione con specifici utenti o in maniera pubblica.
 
+### Scelte progettuali e disambiguazione
 
-- 
+- Due dischi identici ma con un formato diverso sono due dischi diversi.
+- Un collezionista può aggiungere più doppioni dello stesso disco solo se hanno stesso stato di conservazione.
+- Un disco ha un solo autore.
+- Un artista è autore solo in relazione ai propri dischi.
+- I gruppi musicali sono un artista unico.
+- Si individuano due sotto-entità di artista, esecutore (cantante) e compositore (musicista). Anche un compositore può essere autore di un disco.
+- Lo stato di conservazione non è applicabile al formato digitale.
+ 
 ## Progettazione concettuale
 
 <img src="design/Collectors_ER.png" style="margin-left: 13px">
 
-- Copia (stato, quantita)
-- Chiavi
-- Visibilita
-- Generalizzazione
-- Collaborazione
-
+- Come già accennato, è possibile inserire più doppioni di un disco grazie all'attributo *Copia*, ma solo su dischi con lo stesso stato di conservazione.
+- La visibilità di una collezione è espressa sia tramite il relativo attributo, sia tramite la relazione *Condivisione*, che permette di condividere la collezione solo con specifici collezionisti.
+- Un artista può essere autore di un disco, ma può anche collaborare a tracce di altri artisti, tramite la relazione *Collaborazione*.
+- Sono stati aggiunti ulteriori attributi: 
+	- Numero di traccia
+	- Descrizione di un disco
+- È stato scelto di rendere un disco appartenente ad una sola collezione, questo per evitare problemi di accesso/modifica su una stessa informazione da più collezionisti.
 
 - Commentate gli elementi non visibili nella figura (ad esempio il contenuto degli attributi composti) nonché le scelte/assunzioni che vi hanno portato a creare determinate strutture, se lo ritenete opportuno.
 
 ### Formalizzazione dei vincoli non esprimibili nel modello ER
 
-- Elencate gli altri **vincoli** sui dati che avete individuato e che non possono essere espressi nel diagramma ER.
+- Il barcode contraddistingue univocamente un disco da un altro, tuttavia non è possibile identificarlo come chiave primaria dell'entità, in quanto non sempre presente.
 
 ## Progettazione logica
 
@@ -46,11 +55,11 @@
 
 <img src="design/Collectors_ER_Ristrutturato.png" style="margin-left: 13px">
 
-- Per la generalizzazione dell'artista (Esecutore/Compositore) è stata effettuata una *fusione figli-genitore*, in quanto nel database queste due entità non vengono mai trattate separatamente, si è quindi introdotto l'attributo discriminante *Tipo*
+- Per la generalizzazione dell'artista (Esecutore/Compositore) è stata effettuata una *fusione figli-genitore*, in quanto nel database queste due entità non vengono mai trattate separatamente, si è quindi introdotto l'attributo discriminante *Tipo*.
 - Per allegerire l'entità *Disco*, sono state introdotte le entità
 	- *Info_disco*, che contiene tutti gli attributi secondari
 	- *Immagine*, che deriva dalla decomposizione dell'attributo multivalore omonimo, nella quale è possibile specificare il path e l'etichetta di un'immagine
-- È stato introdotto l'attributo anteprima, questo perchè raramente viene visualizzato un disco senza la sua immagine di copertina
+- È stato introdotto l'attributo anteprima, questo perchè raramente viene visualizzato un disco senza la sua immagine di copertina.
 
 ### Traduzione del modello ER nel modello relazionale
 
@@ -74,21 +83,46 @@
 
 ### Implementazione del modello relazionale
 
-- Per la creazione ed il popolamento del database, utilizzare gli script [struttura](src/collectors_struttura.sql) e [dati](src/collectors_dati.sql)
+- Per la creazione ed il popolamento del database, utilizzare gli script [struttura](src/collectors_struttura.sql) e [dati](src/collectors_dati.sql).
 - Alternativamente si può utilizzare il [file di dump](src/dump/collectors_dump.sql), il quale contiene tuti i dati e viste/triggers/funzioni/procedure utilizzati in seguito.
 
 ### Implementazione dei vincoli
 
-- Nel caso abbiate individuato dei **vincoli ulteriori** che non sono esprimibili nel DDL, potrete usare questa sezione per discuterne l'implementazione effettiva, ad esempio riportando il codice di procedure o trigger, o dichiarando che dovranno essere implementati all'esterno del DBMS.
-- Triggers
+Per effettuare una rimozione automatica dei dischi associati ad una collezione quando questa viene eliminata, è stato introdotto il seguente 
+[Trigger](src/triggers/safe_delete_collezione.sql).
+```sql
+DROP TRIGGER IF EXISTS safe_delete_collezione;
+DELIMITER $
+CREATE TRIGGER safe_delete_collezione BEFORE DELETE ON collezione FOR EACH ROW
+BEGIN
+	DELETE disco, copia 
+    FROM disco 
+		JOIN copia ON (OLD.ID = copia.ID_collezione AND disco.ID = copia.ID_disco);
+END$
+DELIMITER ;
+```
+
+
+Quando non è più presente alcuna copia di un disco in una collezione, interviene il seguente [trigger](src/triggers/safe_delete_disco.sql), che elimina il disco dal database.
+```sql
+DROP TRIGGER IF EXISTS safe_delete_disco;
+DELIMITER $
+CREATE TRIGGER safe_delete_disco AFTER DELETE ON copia FOR EACH ROW
+BEGIN
+	DELETE FROM disco d
+    WHERE (SELECT COUNT(*) FROM copia cp WHERE cp.ID_disco = OLD.ID_disco) = 0
+		AND OLD.ID_disco = d.ID;		
+END$
+DELIMITER ;
+```
 
 ### Implementazione funzionalità richieste
 
 #### Funzionalità 1
 
-> Inserimento di una nuova collezione
+> Inserimento di una nuova collezione.
 
-[Funzione](src/functions_and_procedures/aggiungi_collezione.sql) per la creazione di una collezione
+[Funzione](src/functions_and_procedures/aggiungi_collezione.sql) per la creazione di una collezione.
 ```sql
 DROP FUNCTION IF EXISTS aggiungi_collezione;
 DELIMITER $
@@ -102,16 +136,16 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_1.sql) di esempio
+[Query](src/queries/Query_1.sql) di esempio.
 ```sql
 SELECT AGGIUNGI_COLLEZIONE(3, 'Collezione Hip-Hop', 'Privata');
 ```
 
 #### Funzionalità 2
 
-> Aggiunta di dischi a una collezione e di tracce a un disco
+> Aggiunta di dischi a una collezione e di tracce a un disco.
 
-[Funzione](src/functions_and_procedures/aggiungi_disco.sql) per la creazione di un disco ed inserimento nella collezione
+[Funzione](src/functions_and_procedures/aggiungi_disco.sql) per la creazione di un disco ed inserimento nella collezione (aggiunta di una copia).
 ```sql
 DROP FUNCTION IF EXISTS aggiungi_disco;
 DELIMITER $
@@ -139,7 +173,7 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Funzione](src/functions_and_procedures/aggiungi_traccia.sql) per l'inserimento di una traccia in un disco
+[Funzione](src/functions_and_procedures/aggiungi_traccia.sql) per l'inserimento di una traccia in un disco.
 ```sql
 DROP FUNCTION IF EXISTS aggiungi_traccia;
 DELIMITER $
@@ -155,7 +189,7 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_2.sql) di esempio
+[Query](src/queries/Query_2.sql) di esempio.
 ```sql
 SELECT AGGIUNGI_DISCO (4, 4, 'Nuovo', 2, "Passion, Pain & Demon Slayin'", 'CD', '878193179', 'Hip-Hop', 
 	"Passion, Pain & Demon Slayin' è il sesto album in studio del rapper e cantante statunitense Kid Cudi",
@@ -167,10 +201,10 @@ SELECT AGGIUNGI_TRACCIA (7, 8, 'Baptized In Fire', '00:04:45');
 
 #### Funzionalità 3
 
-> Modifica dello stato di pubblicazione di una collezione (da privata a pubblica e viceversa) e aggiunta di nuove condivisioni a una collezione
+> Modifica dello stato di pubblicazione di una collezione (da privata a pubblica e viceversa) e aggiunta di nuove condivisioni a una collezione.
 
 [Funzione](src/functions_and_procedures/aggiorna_visibilita.sql) per la modifica della visibilità di una collezione.
-Se non viene specificato alcun valore per visibilità, viene impostata su Privata
+Se non viene specificato alcun valore per visibilità, viene impostata su privata.
 ```sql
 DROP FUNCTION IF EXISTS aggiorna_visibilita;
 DELIMITER $
@@ -195,7 +229,7 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_3.sql)
+[Query](src/queries/Query_3.sql) di esempio.
 ```sql
 -- modifica dello stato di pubblicazione da privata a pubblica
 SELECT AGGIORNA_VISIBILITA(3, 'Pubblica');
@@ -213,11 +247,11 @@ VALUES (3, 1);
 
 #### Funzionalità 4
 
-> Rimozione di un disco da una collezione
+> Rimozione di un disco da una collezione.
 
 [Funzione](src/functions_and_procedures/elimina_copia.sql) per la rimozione di una copia di un disco da una collezione.
-Se sono presenti più copie di uno stesso disco e con lo stesso stato di conservazione, viene decrementata la quantità.
-Se è presente una sola copia di un disco con un determinato stato di conservazione, viene eliminato il record dalla tabella.
+Se sono presenti più copie di uno stesso disco e con lo stesso stato di conservazione, ne viene decrementata la quantità;
+se è presente una sola copia di un disco con un determinato stato di conservazione, viene eliminato il record dalla tabella.
 ```sql
 DROP FUNCTION IF EXISTS elimina_copia;
 DELIMITER $
@@ -247,50 +281,30 @@ BEGIN
 END$
 DELIMITER ;
 ```
-Quando non è più presente alcuna copia di un disco in una collezione, interviene il seguente [trigger](src/triggers/safe_delete_disco.sql), che elimina il disco dal database
-```sql
-DROP TRIGGER IF EXISTS safe_delete_disco;
-DELIMITER $
-CREATE TRIGGER safe_delete_disco AFTER DELETE ON copia FOR EACH ROW
-BEGIN
-	DELETE FROM disco d
-    WHERE (SELECT COUNT(*) FROM copia cp WHERE cp.ID_disco = OLD.ID_disco) = 0
-		AND OLD.ID_disco = d.ID;		
-END$
-DELIMITER ;
-```
-[Query](src/queries/Query_4.sql) di esempio
+In seguito all'esecuzione di questa funzione, viene eseguito il [trigger](src/triggers/safe_delete_disco.sql) precedentemente discusso, che rimuove il disco se non sono presenti più copie che vi riferiscono nella collezione.
+
+[Query](src/queries/Query_4.sql) di esempio.
 ```sql
 SELECT ELIMINA_COPIA(1, 2, 'Come nuovo');
 ```
 
 #### Funzionalità 5
 
-> Rimozione di una collezione
+> Rimozione di una collezione.
 
-[Trigger](src/triggers/safe_delete_collezione.sql) per la rimozione di tutti i dischi relativi ad una collezione
-```sql
-DROP TRIGGER IF EXISTS safe_delete_collezione;
-DELIMITER $
-CREATE TRIGGER safe_delete_collezione BEFORE DELETE ON collezione FOR EACH ROW
-BEGIN
-	DELETE disco, copia 
-    FROM disco 
-		JOIN copia ON (OLD.ID = copia.ID_collezione AND disco.ID = copia.ID_disco);
-END$
-DELIMITER ;
-```
-[Query](src/queries/Query_5.sql) di esempio
+[Query](src/queries/Query_5.sql) di esempio.
 ```sql
 DELETE FROM collezione 
 WHERE ID = 4;
 ```
+In seguito alla rimozione della collezione, viene eseguito il [trigger](src/triggers/safe_delete_collezione.sql) precedentemente spiegato nella sezione Implementazione vincoli.
+
 
 #### Funzionalità 6
 
-> Lista di tutti i dischi da una collezione
+> Lista di tutti i dischi da una collezione.
 
-[Procedura](src/functions_and_procedures/dischi_collezione.sql) per la lista dei dischi in una collezione
+[Procedura](src/functions_and_procedures/dischi_collezione.sql) per la lista dei dischi in una collezione.
 ```sql
 DROP PROCEDURE IF EXISTS dischi_collezione;
 DELIMITER $
@@ -305,16 +319,16 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_6.sql) di esempio
+[Query](src/queries/Query_6.sql) di esempio.
 ```sql
 CALL dischi_collezione (3);
 ```
 
 #### Funzionalità 7
 
-> Track list di un disco
+> Track list di un disco.
 
-[Procedura](src/functions_and_procedures/tracklist_disco.sql) per la track list in un disco
+[Procedura](src/functions_and_procedures/tracklist_disco.sql) per la track list in un disco.
 ```sql
 DROP PROCEDURE IF EXISTS tracklist_disco;
 DELIMITER $
@@ -327,16 +341,17 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_7.sql) di esempio
+[Query](src/queries/Query_7.sql) di esempio.
 ```sql
 CALL tracklist_disco (4);
 ```
 
 #### Funzionalità 8
 
-> Ricerca di dischi in base a nomi di autori/compositori/interpreti e/o titoli. Si potrà decidere di includere nella ricerca le collezioni di un certo collezionista e/o quelle condivise con lo stesso collezionista e/o quelle pubbliche
+> Ricerca di dischi in base a nomi di autori/compositori/interpreti e/o titoli. Si potrà decidere di includere nella ricerca le collezioni di un certo collezionista e/o quelle condivise con lo stesso collezionista e/o quelle pubbliche.
 
-[Procedura](src/functions_and_procedures/dischi_per_artista.sql) per la ricerca di dischi in base all'autore
+[Procedura](src/functions_and_procedures/dischi_per_artista.sql) per la ricerca di dischi in base all'autore. Viene effettuata una UNION sui valori nelle collezioni pubbliche, poi in quelle private (del collezionista stesso), poi in quelle condivise con il collezionista.
+La procedura ricerca dischi di artisti con nome uguale o simile a quello inserito.
 ```sql
 DROP PROCEDURE IF EXISTS dischi_per_artista;
 DELIMITER $
@@ -376,12 +391,13 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_8_1.sql) di esempio
+[Query](src/queries/Query_8_1.sql) di esempio.
 ```sql
 CALL dischi_per_artista("Kanye", 3);
 ```
 
-[Procedura](src/functions_and_procedures/dischi_per_titolo.sql) per la ricerca di dischi in base al titolo
+[Procedura](src/functions_and_procedures/dischi_per_titolo.sql) per la ricerca di dischi in base al titolo. Come nella procedura precedente, i risultati sono uniti con una UNION.
+La procedura ricerca dischi con titolo uguale o simile a quello inserito.
 ```sql
 DROP PROCEDURE IF EXISTS dischi_per_titolo;
 DELIMITER $
@@ -421,16 +437,16 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_8_2.sql) di esempio
+[Query](src/queries/Query_8_2.sql) di esempio.
 ```sql
 CALL dischi_per_titolo("808", 1);
 ```
 
 #### Funzionalità 9
 
-> Verifica della visibilità di una collezione da parte di un collezionista
+> Verifica della visibilità di una collezione da parte di un collezionista.
 
-[Procedura](src/functions_and_procedures/verifica_visibilita.sql) per la verifica della visibilità
+[Procedura](src/functions_and_procedures/verifica_visibilita.sql) per la verifica della visibilità.
 ```sql
 DROP PROCEDURE IF EXISTS verifica_visibilita;
 DELIMITER $
@@ -470,7 +486,7 @@ CALL verifica_visibilita (1, 3);
 
 > Numero dei brani (tracce di dischi) distinti di un certo autore (compositore, musicista) presenti nelle collezioni pubbliche.
 
-[Procedura](src/functions_and_procedures/num_tracce_artista.sql) per il numero di brani distinti di un autore nelle collezioni pubbliche
+[Procedura](src/functions_and_procedures/num_tracce_artista.sql) per il numero di brani distinti di un autore nelle collezioni pubbliche.
 ```sql
 DROP PROCEDURE IF EXISTS num_tracce_artista;
 DELIMITER $
@@ -487,7 +503,7 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_10.sql) di esempio
+[Query](src/queries/Query_10.sql) di esempio.
 ```sql
 CALL num_tracce_artista(1);
 ```
@@ -496,7 +512,8 @@ CALL num_tracce_artista(1);
 
 > Minuti totali di musica riferibili a un certo autore (compositore, musicista) memorizzati nelle collezioni pubbliche.
 
-[Procedura](src/functions_and_procedures/minuti_artista.sql) per i minuti di musica riferibili ad un autore
+[Procedura](src/functions_and_procedures/minuti_artista.sql) per i minuti di musica riferibili ad un autore.
+La procedura restituisce sia i minuti di musica di cui l'artista è autore, sia quelli di cui l'artista è collaboratore (*featuring*).
 ```sql
 DROP PROCEDURE IF EXISTS minuti_artista;
 DELIMITER $
@@ -509,7 +526,7 @@ BEGIN
         JOIN copia cp ON (d.ID = cp.ID_disco)
         JOIN collezione c ON (cp.ID_collezione = c.ID AND c.visibilita = 'Pubblica')
         JOIN traccia t ON (d.ID = t.ID_disco)
-    ) AS minuti,
+    ) AS minuti_autore,
     (SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata)))
     FROM artista a
 		JOIN collaborazione col ON (a.ID = col.ID_artista)
@@ -532,7 +549,7 @@ CALL minuti_artista(3);
 
 > Statistiche (una query per ciascun valore): numero di collezioni di ciascun collezionista, numero di dischi per genere nel sistema.
 
-[Vista](src/views/num_collezioni_collezionisti.sql) per il numero di collezioni di ciascun collezionista
+[Vista](src/views/num_collezioni_collezionisti.sql) per il numero di collezioni di ciascun collezionista.
 ```sql
 CREATE VIEW num_collezioni_collezionisti AS
 SELECT p.nickname, COUNT(*) AS numero_collezioni
@@ -540,12 +557,12 @@ FROM collezionista p
 	JOIN collezione c ON (p.ID = c.ID_collezionista)
 GROUP BY p.nickname;
 ```
-[Query](src/queries/Query_12_1.sql) di esempio
+[Query](src/queries/Query_12_1.sql) di esempio.
 ```sql
 SELECT * 
 FROM num_collezioni_collezionisti;
 ```
-[Vista](src/views/num_dischi_generi.sql) per il numero di dischi per genere
+[Vista](src/views/num_dischi_generi.sql) per il numero di dischi per genere.
 ```sql
 CREATE VIEW num_dischi_generi AS
 SELECT info.genere, COUNT(*) AS numero_dischi
@@ -553,7 +570,7 @@ FROM info_disco info
 	RIGHT JOIN disco d ON (d.ID = info.ID_disco)
 GROUP BY info.genere;
 ```
-[Query](src/queries/Query_12_2.sql) di esempio
+[Query](src/queries/Query_12_2.sql) di esempio.
 ```sql
 SELECT *
 FROM num_dischi_generi;
@@ -561,7 +578,7 @@ FROM num_dischi_generi;
 
 #### Funzionalità 13
 
-> Opzionalmente, dati un numero di barcode, un titolo e il nome di un autore, individuare tutti i dischi presenti nelle collezioni che sono più coerenti con questi dati (funzionalità utile, ad esempio, per individuare un disco già presente nel sistema prima di inserirne un doppione). L'idea è che il barcode è univoco, quindi i dischi con lo stesso barcode sono senz'altro molto coerenti, dopodichè è possibile cercare dischi con titolo simile e/o con l'autore dato, assegnando maggior punteggio di somiglianza a quelli che hanno più corrispondenze. Questa operazione può essere svolta con una stored procedure o implementata nell'interfaccia Java/PHP
+> Opzionalmente, dati un numero di barcode, un titolo e il nome di un autore, individuare tutti i dischi presenti nelle collezioni che sono più coerenti con questi dati (funzionalità utile, ad esempio, per individuare un disco già presente nel sistema prima di inserirne un doppione). L'idea è che il barcode è univoco, quindi i dischi con lo stesso barcode sono senz'altro molto coerenti, dopodichè è possibile cercare dischi con titolo simile e/o con l'autore dato, assegnando maggior punteggio di somiglianza a quelli che hanno più corrispondenze. Questa operazione può essere svolta con una stored procedure o implementata nell'interfaccia Java/PHP.
 
 [Procedura](src/functions_and_procedures/aggiungi_collezione.sql)
 ```sql
