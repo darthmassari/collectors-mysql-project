@@ -196,7 +196,7 @@ CREATE TABLE `copia` (
 
 LOCK TABLES `copia` WRITE;
 /*!40000 ALTER TABLE `copia` DISABLE KEYS */;
-INSERT INTO `copia` VALUES (1,1,3,'Buono'),(1,2,4,'Come nuovo'),(2,4,1,'n/a'),(2,5,2,'Nuovo'),(3,3,2,'Come nuovo'),(3,6,3,'Buono'),(3,6,1,'Come nuovo');
+INSERT INTO `copia` VALUES (1,1,3,'Buono'),(1,2,4,'Come nuovo'),(2,4,1,'n/a'),(2,5,2,'Nuovo'),(3,3,2,'n/a'),(3,6,3,'Buono'),(3,6,1,'Come nuovo');
 /*!40000 ALTER TABLE `copia` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -291,7 +291,6 @@ CREATE TABLE `info_disco` (
   `descrizione` varchar(5000) DEFAULT NULL,
   `etichetta` varchar(50) DEFAULT NULL,
   `anno` smallint unsigned DEFAULT NULL,
-  `anteprima` blob,
   UNIQUE KEY `ID_disco` (`ID_disco`),
   CONSTRAINT `disco_dettagli` FOREIGN KEY (`ID_disco`) REFERENCES `disco` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `controllo_anno` CHECK (((`anno` > 1900) and (`anno` < 2100))),
@@ -305,7 +304,7 @@ CREATE TABLE `info_disco` (
 
 LOCK TABLES `info_disco` WRITE;
 /*!40000 ALTER TABLE `info_disco` DISABLE KEYS */;
-INSERT INTO `info_disco` VALUES (2,'Hip-Hop','808s & Heartbreak è il quarto album in studio del rapper statunitense Kanye West, pubblicato il 24 novembre 2008 dall\'etichetta discografica Roc-A-Fella Records','Roc-A-Fella Records',2008,NULL),(3,'Hip-Hop',NULL,'GOOD Music',2009,NULL),(4,'Pop',NULL,'Boominati',2022,NULL),(5,'Rock',NULL,NULL,2003,NULL),(6,'Rock',NULL,'Warner Bros. Records',2000,NULL);
+INSERT INTO `info_disco` VALUES (2,'Hip-Hop','808s & Heartbreak è il quarto album in studio del rapper statunitense Kanye West, pubblicato il 24 novembre 2008 dall\'etichetta discografica Roc-A-Fella Records','Roc-A-Fella Records',2008),(3,'Hip-Hop',NULL,'GOOD Music',2009),(4,'Pop',NULL,'Boominati',2022),(5,'Rock',NULL,NULL,2003),(6,'Rock',NULL,'Warner Bros. Records',2000);
 /*!40000 ALTER TABLE `info_disco` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -439,7 +438,7 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `aggiungi_disco`(
 	ID_collezione INTEGER UNSIGNED, quantita SMALLINT UNSIGNED, stato VARCHAR(50), 
     ID_autore INTEGER UNSIGNED, titolo VARCHAR(50), formato varchar(20), 
     barcode VARCHAR(12), genere VARCHAR(50), descrizione VARCHAR(5000), 
-    etichetta VARCHAR(50), anno SMALLINT UNSIGNED, anteprima BLOB) RETURNS int unsigned
+    etichetta VARCHAR(50), anno SMALLINT UNSIGNED) RETURNS int unsigned
     DETERMINISTIC
 BEGIN
     DECLARE IDdisco INTEGER UNSIGNED;
@@ -449,11 +448,20 @@ BEGIN
     
     SET IDdisco = last_insert_id();
     
-    INSERT INTO info_disco (ID_disco, genere, descrizione, etichetta, anno, anteprima)
-    VALUES (IDdisco, genere, descrizione, etichetta, anno, anteprima);
+    INSERT INTO info_disco (ID_disco, genere, descrizione, etichetta, anno)
+    VALUES (IDdisco, genere, descrizione, etichetta, anno);
 	
-    INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
-    VALUES (ID_collezione, IDdisco, quantita, stato);
+    IF (formato = 'Digitale') THEN
+    BEGIN
+		INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
+		VALUES (ID_collezione, IDdisco, quantita, 'n/a');
+	END;
+    ELSE
+    BEGIN
+		INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
+		VALUES (ID_collezione, IDdisco, quantita, stato);
+    END;
+    END IF;
     
     RETURN IDdisco;
 END ;;
@@ -818,4 +826,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-06-07 17:00:36
+-- Dump completed on 2023-06-09 16:26:33

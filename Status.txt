@@ -1,8 +1,0 @@
-Stato
-	- UNIQUE in copia
-	- Passare alle query
-	
-Supposizioni
-	- Gruppi musicali sono artisti
-	- Quando si aggiunge un disco da uno già esistente si ha un altro disco
-	

@@ -84,7 +84,6 @@ CREATE TABLE info_disco (
     descrizione VARCHAR(5000),
     etichetta VARCHAR(50),
     anno SMALLINT UNSIGNED,
-    anteprima BLOB,
     CONSTRAINT generi_musicali CHECK (genere IN ('Hip-Hop' , 'R&B',
         'Blues',
         'Funk',

@@ -59,7 +59,6 @@
 - Per allegerire l'entità *Disco*, sono state introdotte le entità
 	- *Info_disco*, che contiene tutti gli attributi secondari
 	- *Immagine*, che deriva dalla decomposizione dell'attributo multivalore omonimo, nella quale è possibile specificare il path e l'etichetta di un'immagine
-- È stato introdotto l'attributo anteprima, questo perchè raramente viene visualizzato un disco senza la sua immagine di copertina.
 
 ### Traduzione del modello ER nel modello relazionale
 
@@ -70,7 +69,7 @@
 * **Disco** (**<ins>ID</ins>**, <ins>ID_autore</ins>, titolo, formato, barcode) <br>
 * **Copia** (<ins>ID_collezione</ins>, <ins>ID_disco</ins>, stato, quantità) <br>
 * **Immagine** (**<ins>ID</ins>**, <ins>ID_disco</ins>, path, etichetta) <br>
-* **Info_Disco** (<ins>ID_disco</ins>, genere, descrizione, etichetta, anno, anteprima) <br>
+* **Info_Disco** (<ins>ID_disco</ins>, genere, descrizione, etichetta, anno) <br>
 * **Traccia** (**<ins>ID</ins>**, <ins>ID_disco</ins>, numero, titolo, durata) <br>
 * **Collaborazione** (<ins>ID_artista</ins>, <ins>ID_traccia</ins>)
 
@@ -146,6 +145,7 @@ SELECT AGGIUNGI_COLLEZIONE(3, 'Collezione Hip-Hop', 'Privata');
 > Aggiunta di dischi a una collezione e di tracce a un disco.
 
 [Funzione](src/functions_and_procedures/aggiungi_disco.sql) per la creazione di un disco ed inserimento nella collezione (aggiunta di una copia).
+La funzione inoltre verifica che se il formato del disco inserito è digitale, allora lo stato di conservazione deve essere impostato su n/a (non applicabile).
 ```sql
 DROP FUNCTION IF EXISTS aggiungi_disco;
 DELIMITER $
@@ -153,7 +153,7 @@ CREATE FUNCTION aggiungi_disco (
 	ID_collezione INTEGER UNSIGNED, quantita SMALLINT UNSIGNED, stato VARCHAR(50), 
     ID_autore INTEGER UNSIGNED, titolo VARCHAR(50), formato varchar(20), 
     barcode VARCHAR(12), genere VARCHAR(50), descrizione VARCHAR(5000), 
-    etichetta VARCHAR(50), anno SMALLINT UNSIGNED, anteprima BLOB)
+    etichetta VARCHAR(50), anno SMALLINT UNSIGNED)
 RETURNS INTEGER UNSIGNED DETERMINISTIC 
 BEGIN
     DECLARE IDdisco INTEGER UNSIGNED;
@@ -163,11 +163,20 @@ BEGIN
     
     SET IDdisco = last_insert_id();
     
-    INSERT INTO info_disco (ID_disco, genere, descrizione, etichetta, anno, anteprima)
-    VALUES (IDdisco, genere, descrizione, etichetta, anno, anteprima);
-	
-    INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
-    VALUES (ID_collezione, IDdisco, quantita, stato);
+    INSERT INTO info_disco (ID_disco, genere, descrizione, etichetta, anno)
+    VALUES (IDdisco, genere, descrizione, etichetta, anno);
+
+    IF (formato = 'Digitale') THEN
+    BEGIN
+        INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
+        VALUES (ID_collezione, IDdisco, quantita, 'n/a');
+    END;
+    ELSE
+    BEGIN
+        INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
+        VALUES (ID_collezione, IDdisco, quantita, stato);
+    END;
+    END IF;
     
     RETURN IDdisco;
 END$
@@ -193,7 +202,7 @@ DELIMITER ;
 ```sql
 SELECT AGGIUNGI_DISCO (4, 4, 'Nuovo', 2, "Passion, Pain & Demon Slayin'", 'CD', '878193179', 'Hip-Hop', 
 	"Passion, Pain & Demon Slayin' è il sesto album in studio del rapper e cantante statunitense Kid Cudi",
-	'Wicked Awesome', 2016, NULL);
+	'Wicked Awesome', 2016);
    
 SELECT AGGIUNGI_TRACCIA (7, 4, 'By Design', '00:04:17');
 SELECT AGGIUNGI_TRACCIA (7, 8, 'Baptized In Fire', '00:04:45');
