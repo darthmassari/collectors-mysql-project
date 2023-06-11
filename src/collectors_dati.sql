@@ -22,7 +22,7 @@ INSERT INTO artista (ID, nome, tipo)
 VALUES (3, "Metro Boomin", "Compositore");
 
 INSERT INTO artista (ID, nome, tipo)
-VALUES (4, "Linkin Park", "Esecutore");
+VALUES (4, "Linkin Park", "Gruppo");
 
 INSERT INTO artista (ID, nome, tipo)
 VALUES (5, "The Weeknd", "Esecutore");
@@ -112,10 +112,8 @@ INSERT INTO immagine (ID, ID_disco, path, etichetta)
 VALUES (3, 6, "/home/user/pictures/hybrid-theory.jpg", "Copertina");
 
 
-INSERT INTO info_disco (ID_disco, genere, descrizione, etichetta, anno)
-VALUES (2, "Hip-Hop", 
-	"808s & Heartbreak è il quarto album in studio del rapper statunitense Kanye West, pubblicato il 24 novembre 2008 dall'etichetta discografica Roc-A-Fella Records", 
-	"Roc-A-Fella Records", 2008);
+INSERT INTO info_disco (ID_disco, genere, etichetta, anno)
+VALUES (2, "Hip-Hop", "Roc-A-Fella Records", 2008);
 
 INSERT INTO info_disco (ID_disco, genere, etichetta, anno)
 VALUES (3, "Hip-Hop", "GOOD Music", 2009);

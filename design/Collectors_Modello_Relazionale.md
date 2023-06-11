@@ -1,10 +1,10 @@
-* **Collezionista** (<u>ID</u>, nickname, email) <br>
-* **Collezione** (<u>ID</u>, ID_collezionista, nome, visibilità) <br>
-* **Condivisione** (<u>ID_collezionista</u>, <u>ID_collezione</u>) <br>
-* **Artista** (<u>ID</u>, nome, tipo) <br>
-* **Disco** (<u>ID</u>, ID_autore, titolo, formato, barcode) <br>
-* **Copia** (<u>ID_collezione</u>, <u>ID_disco</u>, stato, quantità) <br>
-* **Immagine** (<u>ID</u>, ID_disco, path, etichetta) <br>
-* **Info_Disco** (<u>ID_disco</u>, genere, descrizione, etichetta, anno) <br>
-* **Traccia** (<u>ID</u>, ID_disco, numero, titolo, durata) <br>
-* **Collaborazione** (<u>ID_artista</u>, <u>ID_traccia</u>)
+* **Collezionista** (**<ins>ID</ins>**, nickname, email) <br>
+* **Collezione** (**<ins>ID</ins>**, <ins>ID_collezionista</ins>, nome, visibilità) <br>
+* **Condivisione** (<ins>ID_collezionista</ins>, <ins>ID_collezione</ins>) <br>
+* **Artista** (**<ins>ID</ins>**, nome, tipo) <br>
+* **Disco** (**<ins>ID</ins>**, <ins>ID_autore</ins>, titolo, formato, barcode) <br>
+* **Copia** (<ins>ID_collezione</ins>, <ins>ID_disco</ins>, stato, quantità) <br>
+* **Immagine** (**<ins>ID</ins>**, <ins>ID_disco</ins>, path, etichetta) <br>
+* **Info_Disco** (<ins>ID_disco</ins>, genere, etichetta, anno) <br>
+* **Traccia** (**<ins>ID</ins>**, <ins>ID_disco</ins>, numero, titolo, durata) <br>
+* **Collaborazione** (<ins>ID_artista</ins>, <ins>ID_traccia</ins>)

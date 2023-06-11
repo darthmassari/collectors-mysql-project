@@ -27,7 +27,7 @@ DROP TABLE IF EXISTS `artista`;
 CREATE TABLE `artista` (
   `ID` int unsigned NOT NULL AUTO_INCREMENT,
   `nome` varchar(50) NOT NULL,
-  `tipo` enum('Esecutore','Compositore') NOT NULL,
+  `tipo` enum('Esecutore','Compositore','Gruppo') NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `nome` (`nome`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -39,7 +39,7 @@ CREATE TABLE `artista` (
 
 LOCK TABLES `artista` WRITE;
 /*!40000 ALTER TABLE `artista` DISABLE KEYS */;
-INSERT INTO `artista` VALUES (1,'Kanye West','Esecutore'),(2,'Kid Cudi','Esecutore'),(3,'Metro Boomin','Compositore'),(4,'Linkin Park','Esecutore'),(5,'The Weeknd','Esecutore');
+INSERT INTO `artista` VALUES (1,'Kanye West','Esecutore'),(2,'Kid Cudi','Esecutore'),(3,'Metro Boomin','Compositore'),(4,'Linkin Park','Gruppo'),(5,'The Weeknd','Esecutore');
 /*!40000 ALTER TABLE `artista` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -288,7 +288,6 @@ DROP TABLE IF EXISTS `info_disco`;
 CREATE TABLE `info_disco` (
   `ID_disco` int unsigned NOT NULL,
   `genere` varchar(50) DEFAULT NULL,
-  `descrizione` varchar(5000) DEFAULT NULL,
   `etichetta` varchar(50) DEFAULT NULL,
   `anno` smallint unsigned DEFAULT NULL,
   UNIQUE KEY `ID_disco` (`ID_disco`),
@@ -304,7 +303,7 @@ CREATE TABLE `info_disco` (
 
 LOCK TABLES `info_disco` WRITE;
 /*!40000 ALTER TABLE `info_disco` DISABLE KEYS */;
-INSERT INTO `info_disco` VALUES (2,'Hip-Hop','808s & Heartbreak è il quarto album in studio del rapper statunitense Kanye West, pubblicato il 24 novembre 2008 dall\'etichetta discografica Roc-A-Fella Records','Roc-A-Fella Records',2008),(3,'Hip-Hop',NULL,'GOOD Music',2009),(4,'Pop',NULL,'Boominati',2022),(5,'Rock',NULL,NULL,2003),(6,'Rock',NULL,'Warner Bros. Records',2000);
+INSERT INTO `info_disco` VALUES (2,'Hip-Hop','Roc-A-Fella Records',2008),(3,'Hip-Hop','GOOD Music',2009),(4,'Pop','Boominati',2022),(5,'Rock',NULL,2003),(6,'Rock','Warner Bros. Records',2000);
 /*!40000 ALTER TABLE `info_disco` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -437,8 +436,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` FUNCTION `aggiungi_disco`(
 	ID_collezione INTEGER UNSIGNED, quantita SMALLINT UNSIGNED, stato VARCHAR(50), 
     ID_autore INTEGER UNSIGNED, titolo VARCHAR(50), formato varchar(20), 
-    barcode VARCHAR(12), genere VARCHAR(50), descrizione VARCHAR(5000), 
-    etichetta VARCHAR(50), anno SMALLINT UNSIGNED) RETURNS int unsigned
+    barcode VARCHAR(12), genere VARCHAR(50), etichetta VARCHAR(50), anno SMALLINT UNSIGNED) RETURNS int unsigned
     DETERMINISTIC
 BEGIN
     DECLARE IDdisco INTEGER UNSIGNED;
@@ -448,8 +446,8 @@ BEGIN
     
     SET IDdisco = last_insert_id();
     
-    INSERT INTO info_disco (ID_disco, genere, descrizione, etichetta, anno)
-    VALUES (IDdisco, genere, descrizione, etichetta, anno);
+    INSERT INTO info_disco (ID_disco, genere, etichetta, anno)
+    VALUES (IDdisco, genere, etichetta, anno);
 	
     IF (formato = 'Digitale') THEN
     BEGIN
@@ -571,35 +569,35 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_per_artista`(nome VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
-		FROM artista a
-			JOIN disco d ON (a.ID = d.ID_autore)
-            JOIN copia cp ON (d.ID = cp.ID_disco)
-            JOIN collezione c ON (cp.ID_collezione = c.ID)
-		WHERE c.visibilita = 'Pubblica' AND a.nome LIKE CONCAT ('%', nome, '%')
+	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	FROM artista a
+		JOIN disco d ON (a.ID = d.ID_autore)
+		JOIN copia cp ON (d.ID = cp.ID_disco)
+		JOIN collezione c ON (cp.ID_collezione = c.ID)
+	WHERE c.visibilita = 'Pubblica' AND a.nome LIKE CONCAT ('%', nome, '%')
 	)
     UNION
     (
-		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
-		FROM artista a
-			JOIN disco d ON (a.ID = d.ID_autore)
-            JOIN copia cp ON (d.ID = cp.ID_disco)
-            JOIN collezione c ON (cp.ID_collezione = c.ID)
-		WHERE _ID_collezionista IS NOT NULL 
-			AND c.ID_collezionista = _ID_collezionista 
-            AND a.nome LIKE CONCAT ('%', nome, '%')
+	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	FROM artista a
+		JOIN disco d ON (a.ID = d.ID_autore)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+		JOIN collezione c ON (cp.ID_collezione = c.ID)
+	WHERE _ID_collezionista IS NOT NULL 
+		AND c.ID_collezionista = _ID_collezionista 
+        AND a.nome LIKE CONCAT ('%', nome, '%')
 	)
     UNION
     (
-		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, "Condivisa con te" AS visibilita  
-		FROM artista a
-			JOIN disco d ON (a.ID = d.ID_autore)
-            JOIN copia cp ON (d.ID = cp.ID_disco)
-            JOIN collezione c ON (cp.ID_collezione = c.ID)
-            JOIN condivisione con ON (c.ID = con.ID_collezione)
-		WHERE _ID_collezionista IS NOT NULL 
-			AND con.ID_collezionista = _ID_collezionista 
-            AND a.nome LIKE CONCAT ('%', nome, '%')
+	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, "Condivisa con te" AS visibilita  
+	FROM artista a
+		JOIN disco d ON (a.ID = d.ID_autore)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN condivisione con ON (c.ID = con.ID_collezione)
+	WHERE _ID_collezionista IS NOT NULL 
+		AND con.ID_collezionista = _ID_collezionista 
+        AND a.nome LIKE CONCAT ('%', nome, '%')
 	);
 END ;;
 DELIMITER ;
@@ -826,4 +824,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-06-09 16:26:33
+-- Dump completed on 2023-06-11 12:23:38

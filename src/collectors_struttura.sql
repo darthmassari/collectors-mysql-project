@@ -36,7 +36,7 @@ CREATE TABLE condivisione (
 CREATE TABLE artista (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL UNIQUE,
-    tipo ENUM('Esecutore', 'Compositore') NOT NULL
+    tipo ENUM('Esecutore', 'Compositore', 'Gruppo') NOT NULL
 );
 
 CREATE TABLE disco (
@@ -81,7 +81,6 @@ CREATE TABLE immagine (
 CREATE TABLE info_disco (
     ID_disco INTEGER UNSIGNED NOT NULL UNIQUE,
     genere VARCHAR(50),
-    descrizione VARCHAR(5000),
     etichetta VARCHAR(50),
     anno SMALLINT UNSIGNED,
     CONSTRAINT generi_musicali CHECK (genere IN ('Hip-Hop' , 'R&B',
