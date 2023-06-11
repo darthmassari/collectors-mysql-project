@@ -10,10 +10,6 @@
 
 ## Analisi dei requisiti
 
-- Vanno (eventualmente) discusse tutte le scelte progettuali relative al dominio, le ambiguità e il modo in cui sono state risolte.
-- E' possibile infine inserire qui un glossario che riporta tutti gli oggetti di dominio individuati, con la loro semantica, i loro eventuali sinonimi e le loro proprietà.
-
-
 - Registrazione di dati relativi ai collezionisti, alle loro collezioni di dischi (ogni collezionista può creare più collezioni). 
 - Per ogni disco in una collezione, dovranno essere specificati gli autori, il titolo, l'anno di uscita, l'etichetta discografica, il genere musicale, lo stato di conservazione (scelto da una lista predefinita), il formato, il barcode, se disponibile.
 - Lista delle tracce, ciascuna con titolo, durata, ed compositore ed esecutore, se diverso da quelli dell'intero disco. 
@@ -23,12 +19,11 @@
 
 ### Scelte progettuali e disambiguazione
 
-- Due dischi identici ma con un formato diverso sono due dischi diversi.
 - Un collezionista può aggiungere più doppioni dello stesso disco solo se hanno stesso stato di conservazione.
 - Un disco ha un solo autore.
 - Un artista è autore solo in relazione ai propri dischi.
 - I gruppi musicali sono un artista unico.
-- Si individuano due sotto-entità di artista, esecutore (cantante) e compositore (musicista). Anche un compositore può essere autore di un disco.
+- Si individuano tre sotto-entità di artista, esecutore (cantante), compositore (musicista) e gruppo musicale. Anche un compositore può essere autore di un disco.
 - Lo stato di conservazione non è applicabile al formato digitale.
  
 ## Progettazione concettuale
@@ -38,12 +33,9 @@
 - Come già accennato, è possibile inserire più doppioni di un disco grazie all'attributo *Copia*, ma solo su dischi con lo stesso stato di conservazione.
 - La visibilità di una collezione è espressa sia tramite il relativo attributo, sia tramite la relazione *Condivisione*, che permette di condividere la collezione solo con specifici collezionisti.
 - Un artista può essere autore di un disco, ma può anche collaborare a tracce di altri artisti, tramite la relazione *Collaborazione*.
-- Sono stati aggiunti ulteriori attributi: 
-	- Numero di traccia
-	- Descrizione di un disco
+- È stato aggiunto l'attributo numero di traccia, che insieme a titolo costituisce la chiave primaria di *Traccia*. Questo perché spesso vengono rilasciati dischi in due parti separate, in cui la seconda parte segue la numerazione della prima  
 - È stato scelto di rendere un disco appartenente ad una sola collezione, questo per evitare problemi di accesso/modifica su una stessa informazione da più collezionisti.
-
-- Commentate gli elementi non visibili nella figura (ad esempio il contenuto degli attributi composti) nonché le scelte/assunzioni che vi hanno portato a creare determinate strutture, se lo ritenete opportuno.
+- Oltre ai tipi di artista "Esecutore" e "Compositore", si è individuato il tipo "Gruppo", in quanto molto spesso questi sono esecutori e compositori della loro musica
 
 ### Formalizzazione dei vincoli non esprimibili nel modello ER
 
@@ -55,7 +47,7 @@
 
 <img src="design/Collectors_ER_Ristrutturato.png" style="margin-left: 13px">
 
-- Per la generalizzazione dell'artista (Esecutore/Compositore) è stata effettuata una *fusione figli-genitore*, in quanto nel database queste due entità non vengono mai trattate separatamente, si è quindi introdotto l'attributo discriminante *Tipo*.
+- Per la generalizzazione dell'artista (Esecutore/Compositore/Gruppo) è stata effettuata una *fusione figli-genitore*, in quanto nel database queste due entità non vengono mai trattate separatamente, si è quindi introdotto l'attributo discriminante *Tipo*.
 - Per allegerire l'entità *Disco*, sono state introdotte le entità
 	- *Info_disco*, che contiene tutti gli attributi secondari
 	- *Immagine*, che deriva dalla decomposizione dell'attributo multivalore omonimo, nella quale è possibile specificare il path e l'etichetta di un'immagine
@@ -69,7 +61,7 @@
 * **Disco** (**<ins>ID</ins>**, <ins>ID_autore</ins>, titolo, formato, barcode) <br>
 * **Copia** (<ins>ID_collezione</ins>, <ins>ID_disco</ins>, stato, quantità) <br>
 * **Immagine** (**<ins>ID</ins>**, <ins>ID_disco</ins>, path, etichetta) <br>
-* **Info_Disco** (<ins>ID_disco</ins>, genere, descrizione, etichetta, anno) <br>
+* **Info_Disco** (<ins>ID_disco</ins>, genere, etichetta, anno) <br>
 * **Traccia** (**<ins>ID</ins>**, <ins>ID_disco</ins>, numero, titolo, durata) <br>
 * **Collaborazione** (<ins>ID_artista</ins>, <ins>ID_traccia</ins>)
 
@@ -88,7 +80,7 @@
 ### Implementazione dei vincoli
 
 Per effettuare una rimozione automatica dei dischi associati ad una collezione quando questa viene eliminata, è stato introdotto il seguente 
-[Trigger](src/triggers/safe_delete_collezione.sql).
+[trigger](src/triggers/safe_delete_collezione.sql).
 ```sql
 DROP TRIGGER IF EXISTS safe_delete_collezione;
 DELIMITER $
@@ -152,8 +144,8 @@ DELIMITER $
 CREATE FUNCTION aggiungi_disco (
 	ID_collezione INTEGER UNSIGNED, quantita SMALLINT UNSIGNED, stato VARCHAR(50), 
     ID_autore INTEGER UNSIGNED, titolo VARCHAR(50), formato varchar(20), 
-    barcode VARCHAR(12), genere VARCHAR(50), descrizione VARCHAR(5000), 
-    etichetta VARCHAR(50), anno SMALLINT UNSIGNED)
+    barcode VARCHAR(12), genere VARCHAR(50), etichetta VARCHAR(50), anno SMALLINT UNSIGNED)
+
 RETURNS INTEGER UNSIGNED DETERMINISTIC 
 BEGIN
     DECLARE IDdisco INTEGER UNSIGNED;
@@ -163,18 +155,18 @@ BEGIN
     
     SET IDdisco = last_insert_id();
     
-    INSERT INTO info_disco (ID_disco, genere, descrizione, etichetta, anno)
-    VALUES (IDdisco, genere, descrizione, etichetta, anno);
-
+    INSERT INTO info_disco (ID_disco, genere, etichetta, anno)
+    VALUES (IDdisco, genere, etichetta, anno);
+	
     IF (formato = 'Digitale') THEN
     BEGIN
-        INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
-        VALUES (ID_collezione, IDdisco, quantita, 'n/a');
-    END;
+		INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
+		VALUES (ID_collezione, IDdisco, quantita, 'n/a');
+	END;
     ELSE
     BEGIN
-        INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
-        VALUES (ID_collezione, IDdisco, quantita, stato);
+		INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
+		VALUES (ID_collezione, IDdisco, quantita, stato);
     END;
     END IF;
     
@@ -367,35 +359,35 @@ DELIMITER $
 CREATE PROCEDURE dischi_per_artista (nome VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
-		FROM artista a
-			JOIN disco d ON (a.ID = d.ID_autore)
-            JOIN copia cp ON (d.ID = cp.ID_disco)
-            JOIN collezione c ON (cp.ID_collezione = c.ID)
-		WHERE c.visibilita = 'Pubblica' AND a.nome LIKE CONCAT ('%', nome, '%')
+	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	FROM artista a
+		JOIN disco d ON (a.ID = d.ID_autore)
+		JOIN copia cp ON (d.ID = cp.ID_disco)
+		JOIN collezione c ON (cp.ID_collezione = c.ID)
+	WHERE c.visibilita = 'Pubblica' AND a.nome LIKE CONCAT ('%', nome, '%')
 	)
     UNION
     (
-		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
-		FROM artista a
-			JOIN disco d ON (a.ID = d.ID_autore)
-            JOIN copia cp ON (d.ID = cp.ID_disco)
-            JOIN collezione c ON (cp.ID_collezione = c.ID)
-		WHERE _ID_collezionista IS NOT NULL 
-			AND c.ID_collezionista = _ID_collezionista 
-            AND a.nome LIKE CONCAT ('%', nome, '%')
+	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	FROM artista a
+		JOIN disco d ON (a.ID = d.ID_autore)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+		JOIN collezione c ON (cp.ID_collezione = c.ID)
+	WHERE _ID_collezionista IS NOT NULL 
+		AND c.ID_collezionista = _ID_collezionista 
+        AND a.nome LIKE CONCAT ('%', nome, '%')
 	)
     UNION
     (
-		SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, "Condivisa con te" AS visibilita  
-		FROM artista a
-			JOIN disco d ON (a.ID = d.ID_autore)
-            JOIN copia cp ON (d.ID = cp.ID_disco)
-            JOIN collezione c ON (cp.ID_collezione = c.ID)
-            JOIN condivisione con ON (c.ID = con.ID_collezione)
-		WHERE _ID_collezionista IS NOT NULL 
-			AND con.ID_collezionista = _ID_collezionista 
-            AND a.nome LIKE CONCAT ('%', nome, '%')
+	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, "Condivisa con te" AS visibilita  
+	FROM artista a
+		JOIN disco d ON (a.ID = d.ID_autore)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN condivisione con ON (c.ID = con.ID_collezione)
+	WHERE _ID_collezionista IS NOT NULL 
+		AND con.ID_collezionista = _ID_collezionista 
+        AND a.nome LIKE CONCAT ('%', nome, '%')
 	);
 END$
 DELIMITER ;
@@ -560,6 +552,7 @@ CALL minuti_artista(3);
 
 [Vista](src/views/num_collezioni_collezionisti.sql) per il numero di collezioni di ciascun collezionista.
 ```sql
+DROP VIEW IF EXISTS num_collezioni_collezionisti;
 CREATE VIEW num_collezioni_collezionisti AS
 SELECT p.nickname, COUNT(*) AS numero_collezioni
 FROM collezionista p
@@ -573,6 +566,7 @@ FROM num_collezioni_collezionisti;
 ```
 [Vista](src/views/num_dischi_generi.sql) per il numero di dischi per genere.
 ```sql
+DROP VIEW IF EXISTS num_dischi_generi;
 CREATE VIEW num_dischi_generi AS
 SELECT info.genere, COUNT(*) AS numero_dischi
 FROM info_disco info
