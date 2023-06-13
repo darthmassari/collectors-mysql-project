@@ -178,9 +178,7 @@ DELIMITER ;
 ```sql
 DROP FUNCTION IF EXISTS aggiungi_traccia;
 DELIMITER $
-CREATE FUNCTION aggiungi_traccia (
-	ID_disco INTEGER UNSIGNED, numero TINYINT UNSIGNED, 
-    titolo VARCHAR(50), durata TIME)
+CREATE FUNCTION aggiungi_traccia (ID_disco INTEGER UNSIGNED, numero TINYINT UNSIGNED, titolo VARCHAR(50), durata TIME)
 RETURNS INTEGER UNSIGNED DETERMINISTIC
 BEGIN
 	INSERT INTO traccia (ID_disco, numero, titolo, durata) 
@@ -359,7 +357,7 @@ DELIMITER $
 CREATE PROCEDURE dischi_per_artista (nome VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
 		JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -368,7 +366,7 @@ BEGIN
 	)
     UNION
     (
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -379,7 +377,7 @@ BEGIN
 	)
     UNION
     (
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, "Condivisa con te" AS visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -405,7 +403,7 @@ DELIMITER $
 CREATE PROCEDURE dischi_per_titolo (titolo VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, c.visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -414,7 +412,7 @@ BEGIN
     )
     UNION
     (
-	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, c.visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -425,7 +423,7 @@ BEGIN
     )
     UNION
     (
-	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -454,25 +452,25 @@ DELIMITER $
 CREATE PROCEDURE verifica_visibilita (ID_collezionista INTEGER, ID_collezione INTEGER)
 BEGIN
 	(
-		SELECT collezione.nome, collezione.visibilita
-		FROM collezione
-		WHERE ID_collezionista = collezione.ID_collezionista 
-			AND ID_collezione = collezione.ID
+	SELECT collezione.nome, collezione.visibilita
+	FROM collezione
+	WHERE ID_collezionista = collezione.ID_collezionista 
+		AND ID_collezione = collezione.ID
 	)
 	UNION
 	(
-		SELECT collezione.nome, collezione.visibilita
-		FROM collezione
-		WHERE ID_collezione = collezione.ID 
-			AND collezione.visibilita = 'Pubblica'
+	SELECT collezione.nome, collezione.visibilita
+	FROM collezione
+	WHERE ID_collezione = collezione.ID 
+		AND collezione.visibilita = 'Pubblica'
 	)
 	UNION
 	(
-		SELECT collezione.nome, 'Condivisa con te' AS visibilita
-		FROM collezione, condivisione
-		WHERE ID_collezione = condivisione.ID_collezione 
-			AND ID_collezionista = condivisione.ID_collezionista 
-			AND ID_collezione = collezione.ID
+	SELECT collezione.nome, 'Condivisa con te' AS visibilita
+	FROM collezione, condivisione
+	WHERE ID_collezione = condivisione.ID_collezione 
+		AND ID_collezionista = condivisione.ID_collezionista 
+		AND ID_collezione = collezione.ID
 	)
     LIMIT 1;
 END$
@@ -520,30 +518,20 @@ DROP PROCEDURE IF EXISTS minuti_artista;
 DELIMITER $
 CREATE PROCEDURE minuti_artista (ID_artista INTEGER)
 BEGIN
-	SELECT a.nome,
-	(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata)))
+	SELECT a.nome, SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata))) as minuti_artista
     FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID AND c.visibilita = 'Pubblica')
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
         JOIN traccia t ON (d.ID = t.ID_disco)
-    ) AS minuti_autore,
-    (SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata)))
-    FROM artista a
-		JOIN collaborazione col ON (a.ID = col.ID_artista)
-        JOIN traccia t ON (col.ID_artista = t.ID)
-        JOIN disco d ON (t.ID_disco = d.ID)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID AND c.visibilita = 'Pubblica')
-	) AS minuti_featuring
-    FROM artista a
-    WHERE ID_artista = a.ID; 
+    WHERE c.visibilita = 'pubblica' AND ID_artista = a.ID
+    GROUP BY a.nome;
 END$
 DELIMITER ;
 ```
 [Query](src/queries/Query_11.sql) di esempio
 ```sql
-CALL minuti_artista(3);
+CALL minuti_artista(1);
 ```
 
 #### Funzionalità 12
@@ -583,11 +571,55 @@ FROM num_dischi_generi;
 
 > Opzionalmente, dati un numero di barcode, un titolo e il nome di un autore, individuare tutti i dischi presenti nelle collezioni che sono più coerenti con questi dati (funzionalità utile, ad esempio, per individuare un disco già presente nel sistema prima di inserirne un doppione). L'idea è che il barcode è univoco, quindi i dischi con lo stesso barcode sono senz'altro molto coerenti, dopodichè è possibile cercare dischi con titolo simile e/o con l'autore dato, assegnando maggior punteggio di somiglianza a quelli che hanno più corrispondenze. Questa operazione può essere svolta con una stored procedure o implementata nell'interfaccia Java/PHP.
 
-[Procedura](src/functions_and_procedures/aggiungi_collezione.sql)
+Un modo per implementare questa funzionalità è quello di combinare i risultati della procedura qui specificata con quelli delle procedure viste nella funzionalità 8 (*dischi_per_titolo* e *dischi_per_artista*).
 ```sql
-CODICE
+DROP PROCEDURE IF EXISTS dischi_per_barcode;
+DELIMITER $
+CREATE PROCEDURE dischi_per_barcode (barcode VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
+BEGIN
+	(
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+    WHERE c.visibilita = 'Pubblica' AND d.barcode LIKE CONCAT(barcode, '%')
+    )
+    UNION
+    (
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+    WHERE _ID_collezionista IS NOT NULL 
+		AND c.ID_collezionista = _ID_collezionista 
+        AND d.barcode LIKE CONCAT(barcode, '%')
+    )
+    UNION
+    (
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN condivisione con ON (c.ID = con.ID_collezione)
+    WHERE _ID_collezionista IS NOT NULL 
+		AND con.ID_collezionista = _ID_collezionista 
+		AND d.barcode LIKE CONCAT(barcode, '%')
+    );
+END$
+DELIMITER ;
 ```
-[Query](src/queries/Query_1.sql)
+Esempio di **pseudocodice**: vengono messi in cima i risultati con barcode più simile, che è il parametro più importante nella ricerca di un disco. Seguono poi i risultati con titolo ed artista simili.
 ```sql
-CODICE
+CREATE PROCEDURE ricerca_dischi (_barcode VARCHAR(12), _titolo VARCHAR(50), _nome_artista VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
+BEGIN
+	CALL dischi_per_barcode(_barcode, _ID_collezionista);
+	UNION
+	CALL dischi_per_titolo(_titolo, _ID_collezionista);
+	UNION
+	CALL dischi_per_artista(_artista, _ID_collezionista); 
+END;
 ```
+In questo modo si può aumentare il riutilizzo delle procedure già esistenti.
