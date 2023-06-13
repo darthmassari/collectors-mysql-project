@@ -495,14 +495,6 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_per_artista`(nome VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
-	FROM artista a
-		JOIN disco d ON (a.ID = d.ID_autore)
-		JOIN collezione c ON (d.ID_collezione = c.ID)
-	WHERE c.visibilita = 'Pubblica' AND a.nome LIKE CONCAT ('%', nome, '%')
-	)
-    UNION
-    (
 	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione 
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
@@ -521,6 +513,14 @@ BEGIN
 	WHERE _ID_collezionista IS NOT NULL 
 		AND con.ID_collezionista = _ID_collezionista 
         AND a.nome LIKE CONCAT ('%', nome, '%')
+	)
+    UNION
+    (
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
+	FROM artista a
+		JOIN disco d ON (a.ID = d.ID_autore)
+		JOIN collezione c ON (d.ID_collezione = c.ID)
+	WHERE c.visibilita = 'Pubblica' AND a.nome LIKE CONCAT ('%', nome, '%')
 	);
 END ;;
 DELIMITER ;
@@ -545,14 +545,6 @@ BEGIN
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN collezione c ON (d.ID_collezione = c.ID)
-    WHERE c.visibilita = 'Pubblica' AND d.barcode LIKE CONCAT(barcode, '%')
-    )
-    UNION
-    (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
-    FROM disco d 
-		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN collezione c ON (d.ID_collezione = c.ID)
     WHERE _ID_collezionista IS NOT NULL 
 		AND c.ID_collezionista = _ID_collezionista 
         AND d.barcode LIKE CONCAT(barcode, '%')
@@ -567,6 +559,14 @@ BEGIN
     WHERE _ID_collezionista IS NOT NULL 
 		AND con.ID_collezionista = _ID_collezionista 
 		AND d.barcode LIKE CONCAT(barcode, '%')
+    )
+    UNION
+    (
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
+    WHERE c.visibilita = 'Pubblica' AND d.barcode LIKE CONCAT(barcode, '%')
     );
 END ;;
 DELIMITER ;
@@ -591,14 +591,6 @@ BEGIN
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN collezione c ON (d.ID_collezione = c.ID)
-    WHERE c.visibilita = 'Pubblica' AND d.titolo LIKE CONCAT('%', titolo, '%')
-    )
-    UNION
-    (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
-    FROM disco d 
-		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN collezione c ON (d.ID_collezione = c.ID)
     WHERE _ID_collezionista IS NOT NULL 
 		AND c.ID_collezionista = _ID_collezionista 
         AND d.titolo LIKE CONCAT('%', titolo, '%')
@@ -613,6 +605,14 @@ BEGIN
     WHERE _ID_collezionista IS NOT NULL 
 		AND con.ID_collezionista = _ID_collezionista 
 		AND d.titolo LIKE CONCAT('%', titolo, '%')
+    )
+    UNION
+    (
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
+    WHERE c.visibilita = 'Pubblica' AND d.titolo LIKE CONCAT('%', titolo, '%')
     );
 END ;;
 DELIMITER ;
@@ -778,4 +778,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-06-13 18:14:03
+-- Dump completed on 2023-06-13 19:22:48

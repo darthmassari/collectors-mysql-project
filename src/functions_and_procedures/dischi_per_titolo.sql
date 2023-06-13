@@ -7,14 +7,6 @@ BEGIN
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN collezione c ON (d.ID_collezione = c.ID)
-    WHERE c.visibilita = 'Pubblica' AND d.titolo LIKE CONCAT('%', titolo, '%')
-    )
-    UNION
-    (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
-    FROM disco d 
-		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN collezione c ON (d.ID_collezione = c.ID)
     WHERE _ID_collezionista IS NOT NULL 
 		AND c.ID_collezionista = _ID_collezionista 
         AND d.titolo LIKE CONCAT('%', titolo, '%')
@@ -29,6 +21,14 @@ BEGIN
     WHERE _ID_collezionista IS NOT NULL 
 		AND con.ID_collezionista = _ID_collezionista 
 		AND d.titolo LIKE CONCAT('%', titolo, '%')
+    )
+    UNION
+    (
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
+    WHERE c.visibilita = 'Pubblica' AND d.titolo LIKE CONCAT('%', titolo, '%')
     );
 END$
 DELIMITER ;

@@ -1,18 +1,18 @@
-# Laboratorio di Basi di Dati:  *Progetto "Collectors"*
+# Laboratorio di Basi di Dati: *Progetto "Collectors"*
 
 **Gruppo di lavoro**:
 
 | Matricola | Nome  |             Cognome             | Contributo al progetto |
 |:---------:|:-----:|:-------------------------------:|:----------------------:|
-|  271744   | Marco |             Ciucci              |          100%          | 
+|  271744   | Marco |             Ciucci              |         Totale         | 
 
-**Data di consegna del progetto**: gg/mm/aaaa
+**Data di consegna del progetto**: 13/06/2023
 
 ## Analisi dei requisiti
 
-- Registrazione di dati relativi ai collezionisti, alle loro collezioni di dischi (ogni collezionista può creare più collezioni). 
+- Registrazione di dati relativi ai collezionisti e alle loro collezioni di dischi (ogni collezionista può creare più collezioni). 
 - Per ogni disco in una collezione, dovranno essere specificati gli autori, il titolo, l'anno di uscita, l'etichetta discografica, il genere musicale, lo stato di conservazione (scelto da una lista predefinita), il formato, il barcode, se disponibile.
-- Lista delle tracce, ciascuna con titolo, durata, ed compositore ed esecutore, se diverso da quelli dell'intero disco. 
+- Lista delle tracce, ciascuna con titolo, durata, compositore ed esecutore, se diverso da quelli dell'intero disco. 
 - Ogni disco può essere associato a una o più immagini (copertina, retro, eventuali facciate interne o libretti, ecc.).
 - Per ogni disco, il collezionista potrà inoltre indicare l'eventuale numero di doppioni a sua disposizione.
 - I collezionisti possono decidere di condividere la propria collezione con specifici utenti o in maniera pubblica.
@@ -20,25 +20,31 @@
 ### Scelte progettuali e disambiguazione
 
 - Un collezionista può aggiungere più doppioni dello stesso disco solo se hanno stesso stato di conservazione.
-- Un disco ha un solo autore. Possono però essere specificati ulteriori contributori (artisti) per ogni traccia.
+- Un disco ha un solo autore. Possono però essere specificati ulteriori contributori (artisti).
 - Un artista è autore solo in relazione ai propri dischi.
 - I gruppi musicali sono un artista unico.
 - Si individuano tre sotto-entità di artista: esecutore (cantante), compositore (musicista) e gruppo musicale. Anche un compositore può essere autore di un disco.
 - Lo stato di conservazione non è applicabile al formato digitale.
- 
+- Talvolta il concetto di doppione sarà definito con il termine "copia"
+- Talvolta il concetto di collaborazione sarà definito con il termine "featuring"
+
 ## Progettazione concettuale
 
 <img src="design/Collectors_ER.png" style="margin-left: 13px">
 
-- Nota: un disco con un determinato formato e riferito ad una certa collezione è unico: un disco identico ma con un formato differente o riferito ad una collezione differente rappresenta un'ulteriore istanza di *Disco*. 
-	- La scelta relativa al formato deriva dal fatto che spesso uno stesso disco in formati differenti ha caratteristiche diverse, ad esempio le immagini presenti all'inerno possono variare dal formato CD a quello vinile, oppure non sono proprio presenti come in quello digitale. Inoltre spesso formati differenti hanno barcode differenti.
-	- La scelta relativa alla collezione di riferimento è dovuta a fattori di "protezione" del dato, ossia per impedire che la modifica di un'informazione di un disco da parte di un collezionista si ripercuota sulle collezioni degli altri collzionisti.
+- Nota: un disco con un determinato formato e riferito a una certa collezione è unico: un disco identico ma con un formato differente o riferito a una collezione differente rappresenta un'ulteriore istanza di *Disco*. 
+	- La scelta relativa al formato deriva dal fatto che spesso uno stesso disco in formati differenti ha caratteristiche diverse, ad esempio le immagini presenti all'interno possono variare dal formato CD a quello vinile, oppure non sono proprio presenti come in quello digitale. Inoltre spesso formati differenti hanno barcode differenti.
+	- La scelta relativa alla collezione di riferimento è dovuta a fattori di "protezione" del dato, ossia per impedire che la modifica di un'informazione di un disco da parte di un collezionista si ripercuota sulle collezioni degli altri collezionisti.
 - Come già accennato, è possibile inserire più copie di uno stesso disco con formati diversi. Si possono inoltre inserire doppioni di uno stesso disco con lo stesso stato di conservazione.
 - La visibilità di una collezione è espressa sia tramite il relativo attributo, sia tramite la relazione *Condivisione*, che permette di condividere la collezione solo con specifici collezionisti.
 - Un artista può essere autore di un disco, ma può anche collaborare a tracce di altri artisti, tramite la relazione *Collaborazione*.
 - È stato aggiunto l'attributo numero di traccia, che insieme a titolo costituisce la chiave primaria di *Traccia*. Questo perché spesso vengono rilasciati dischi in due parti separate, in cui la seconda parte segue la numerazione della prima.
-- È stato scelto di rendere un disco appartenente ad una sola collezione, questo per evitare problemi di accesso/modifica su una stessa informazione da più collezionisti.
+- Sebbene alcuni dischi possano avere tracce in comune (es. edizioni deluxe), una traccia è riferita a un solo disco, per evitare che la rimozione di una traccia da un disco comporti la rimozione anche dagli altri dischi.
 - Oltre ai tipi di artista "Esecutore" e "Compositore", si è individuato il tipo "Gruppo", in quanto molto spesso questi sono esecutori e compositori della loro musica
+- Entità deboli
+  - **Collezione**: possono esserci più collezioni con uno stesso nome ma appartenenti a collezionisti diversi
+  - **Disco**: possono esserci più dischi con uno stesso titolo, inoltre deve essere sempre riferito a una collezione
+  - **Traccia**: possono esserci più tracce con uno stesso titolo
 
 ### Formalizzazione dei vincoli non esprimibili nel modello ER
 
@@ -46,14 +52,14 @@
 
 ## Progettazione logica
 
-### Ristrutturazione ed ottimizzazione del modello ER
+### Ristrutturazione e ottimizzazione del modello ER
 
 <img src="design/Collectors_ER_Ristrutturato.png" style="margin-left: 13px">
 
-- Per la generalizzazione dell'artista (Esecutore/Compositore/Gruppo) è stata effettuata una *fusione figli-genitore*, in quanto nel database queste due entità non vengono mai trattate separatamente, si è quindi introdotto l'attributo discriminante *Tipo*.
-- Per allegerire l'entità *Disco*, sono state introdotte le entità
+- Per la generalizzazione dell'artista (Esecutore/Compositore/Gruppo) è stata effettuata una *fusione figli-genitore*, in quanto nel database queste entità non vengono mai trattate separatamente, si è quindi introdotto l'attributo discriminante *Tipo*.
+- Per alleggerire l'entità *Disco*, sono state introdotte le entità
 	- *Info_disco*, che contiene tutti gli attributi secondari
-	- *Immagine*, che deriva dalla decomposizione dell'attributo multivalore omonimo, nella quale è possibile specificare il path e l'etichetta di un'immagine
+	- *Immagine*, che deriva dalla decomposizione dell'attributo multi valore omonimo, nella quale è possibile specificare il path e l'etichetta di un'immagine
 
 ### Traduzione del modello ER nel modello relazionale
 
@@ -76,13 +82,13 @@
 
 ### Implementazione del modello relazionale
 
-- Per la creazione ed il popolamento del database, utilizzare gli script [struttura](src/collectors_struttura.sql) e [dati](src/collectors_dati.sql).
-- Alternativamente si può utilizzare il [file di dump](src/dump/collectors_dump.sql), il quale contiene tuti i dati e tutte le viste, funzioni e procedure utilizzate in seguito.
-
-### Implementazione dei vincoli
+- Per la creazione e il popolamento del database, utilizzare gli script [struttura](src/collectors_struttura.sql) e [dati](src/collectors_dati.sql).
+- Alternativamente si può utilizzare il [file di dump](src/dump/collectors_dump.sql), il quale contiene tutti i dati e tutte le viste, funzioni e procedure utilizzate in seguito.
+- Tutti gli script utilizzati sono inoltre presenti nella [directory src](src/).
 
 ### Implementazione funzionalità richieste
 
+La maggior parte delle funzionalità richieste sono implementate mediante funzioni o stored procedures.
 #### Funzionalità 1
 
 > Inserimento di una nuova collezione.
@@ -110,7 +116,7 @@ SELECT AGGIUNGI_COLLEZIONE(3, 'Collezione Hip-Hop', 'Privata');
 
 > Aggiunta di dischi a una collezione e di tracce a un disco.
 
-[Funzione](src/functions_and_procedures/aggiungi_disco.sql) per la creazione di un disco ed inserimento nella collezione (aggiunta di una copia).
+[Funzione](src/functions_and_procedures/aggiungi_disco.sql) per la creazione di un disco e inserimento nella collezione (aggiunta di una copia).
 La funzione inoltre verifica che se il formato del disco inserito è digitale, allora lo stato di conservazione deve essere impostato su n/a (non applicabile).
 ```sql
 DROP FUNCTION IF EXISTS aggiungi_disco;
@@ -306,7 +312,7 @@ CALL tracklist_disco (4);
 
 #### Funzionalità 8
 
-> Ricerca di dischi in base a nomi di autori/compositori/interpreti e/o titoli. Si potrà decidere di includere nella ricerca le collezioni di un certo collezionista e/o quelle condivise con lo stesso collezionista e/o quelle pubbliche.
+> Ricerca di dischi in base a nomi di autori/compositori/interpreti e/o titoli. Si potrà decidere d'includere nella ricerca le collezioni di un certo collezionista e/o quelle condivise con lo stesso collezionista e/o quelle pubbliche.
 
 [Procedura](src/functions_and_procedures/dischi_per_artista.sql) per la ricerca di dischi in base all'autore. Viene effettuata una UNION sui valori nelle collezioni private (del collezionista stesso), poi in quelle condivise con il collezionista, poi in quelle pubbliche.
 La procedura ricerca dischi di artisti con nome uguale o simile a quello inserito.
@@ -463,7 +469,7 @@ CALL num_tracce_artista(1);
 
 > Minuti totali di musica riferibili a un certo autore (compositore, musicista) memorizzati nelle collezioni pubbliche.
 
-[Procedura](src/functions_and_procedures/minuti_artista.sql) per i minuti di musica riferibili ad un autore.
+[Procedura](src/functions_and_procedures/minuti_artista.sql) per i minuti di musica riferibili a un autore.
 ```sql
 DROP PROCEDURE IF EXISTS minuti_artista;
 DELIMITER $
@@ -521,7 +527,7 @@ FROM num_dischi_generi;
 
 #### Funzionalità 13
 
-> Opzionalmente, dati un numero di barcode, un titolo e il nome di un autore, individuare tutti i dischi presenti nelle collezioni che sono più coerenti con questi dati (funzionalità utile, ad esempio, per individuare un disco già presente nel sistema prima di inserirne un doppione). L'idea è che il barcode è univoco, quindi i dischi con lo stesso barcode sono senz'altro molto coerenti, dopodichè è possibile cercare dischi con titolo simile e/o con l'autore dato, assegnando maggior punteggio di somiglianza a quelli che hanno più corrispondenze.
+> Opzionalmente, dati un numero di barcode, un titolo e il nome di un autore, individuare tutti i dischi presenti nelle collezioni che sono più coerenti con questi dati (funzionalità utile, ad esempio, per individuare un disco già presente nel sistema prima d'inserirne un doppione). L'idea è che il barcode è univoco, quindi i dischi con lo stesso barcode sono senz'altro molto coerenti, dopodiché è possibile cercare dischi con titolo simile e/o con l'autore dato, assegnando maggior punteggio di somiglianza a quelli che hanno più corrispondenze.
 
 Un modo per implementare questa funzionalità è quello di combinare i risultati della [procedura](src/functions_and_procedures/dischi_per_barcode) qui specificata con quelli delle procedure viste nella funzionalità 8 (*dischi_per_titolo* e *dischi_per_artista*).
 ```sql
@@ -560,7 +566,7 @@ BEGIN
 END$
 DELIMITER ;
 ```
-Esempio di **pseudocodice**: vengono messi in cima i risultati con barcode più simile, che è il parametro più importante nella ricerca di un disco. Seguono poi i risultati con titolo ed artista simili.
+Esempio di **pseudocodice**: vengono messi in cima i risultati con barcode più simile, che è il parametro più importante nella ricerca di un disco. Seguono poi i risultati con titolo e artista simili.
 ```sql
 CREATE PROCEDURE ricerca_dischi (_barcode VARCHAR(12), _titolo VARCHAR(50), _nome_artista VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
