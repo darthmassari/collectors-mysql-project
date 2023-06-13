@@ -20,20 +20,23 @@
 ### Scelte progettuali e disambiguazione
 
 - Un collezionista può aggiungere più doppioni dello stesso disco solo se hanno stesso stato di conservazione.
-- Un disco ha un solo autore.
+- Un disco ha un solo autore. Possono però essere specificati ulteriori contributori (artisti) per ogni traccia.
 - Un artista è autore solo in relazione ai propri dischi.
 - I gruppi musicali sono un artista unico.
-- Si individuano tre sotto-entità di artista, esecutore (cantante), compositore (musicista) e gruppo musicale. Anche un compositore può essere autore di un disco.
+- Si individuano tre sotto-entità di artista: esecutore (cantante), compositore (musicista) e gruppo musicale. Anche un compositore può essere autore di un disco.
 - Lo stato di conservazione non è applicabile al formato digitale.
  
 ## Progettazione concettuale
 
 <img src="design/Collectors_ER.png" style="margin-left: 13px">
 
-- Come già accennato, è possibile inserire più doppioni di un disco grazie all'attributo *Copia*, ma solo su dischi con lo stesso stato di conservazione.
+- Nota: un disco con un determinato formato e riferito ad una certa collezione è unico: un disco identico ma con un formato differente o riferito ad una collezione differente rappresenta un'ulteriore istanza di *Disco*. 
+	- La scelta relativa al formato deriva dal fatto che spesso uno stesso disco in formati differenti ha caratteristiche diverse, ad esempio le immagini presenti all'inerno possono variare dal formato CD a quello vinile, oppure non sono proprio presenti come in quello digitale. Inoltre spesso formati differenti hanno barcode differenti.
+	- La scelta relativa alla collezione di riferimento è dovuta a fattori di "protezione" del dato, ossia per impedire che la modifica di un'informazione di un disco da parte di un collezionista si ripercuota sulle collezioni degli altri collzionisti.
+- Come già accennato, è possibile inserire più copie di uno stesso disco con formati diversi. Si possono inoltre inserire doppioni di uno stesso disco con lo stesso stato di conservazione.
 - La visibilità di una collezione è espressa sia tramite il relativo attributo, sia tramite la relazione *Condivisione*, che permette di condividere la collezione solo con specifici collezionisti.
 - Un artista può essere autore di un disco, ma può anche collaborare a tracce di altri artisti, tramite la relazione *Collaborazione*.
-- È stato aggiunto l'attributo numero di traccia, che insieme a titolo costituisce la chiave primaria di *Traccia*. Questo perché spesso vengono rilasciati dischi in due parti separate, in cui la seconda parte segue la numerazione della prima  
+- È stato aggiunto l'attributo numero di traccia, che insieme a titolo costituisce la chiave primaria di *Traccia*. Questo perché spesso vengono rilasciati dischi in due parti separate, in cui la seconda parte segue la numerazione della prima.
 - È stato scelto di rendere un disco appartenente ad una sola collezione, questo per evitare problemi di accesso/modifica su una stessa informazione da più collezionisti.
 - Oltre ai tipi di artista "Esecutore" e "Compositore", si è individuato il tipo "Gruppo", in quanto molto spesso questi sono esecutori e compositori della loro musica
 
