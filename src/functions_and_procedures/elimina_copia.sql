@@ -1,25 +1,19 @@
 DROP FUNCTION IF EXISTS elimina_copia;
 DELIMITER $
-CREATE FUNCTION elimina_copia (_ID_collezione INTEGER UNSIGNED, _ID_disco INTEGER UNSIGNED, _stato VARCHAR(50))
+CREATE FUNCTION elimina_copia (_ID_disco INTEGER UNSIGNED)
 RETURNS VARCHAR(50) DETERMINISTIC
 BEGIN
-	IF ((SELECT cp.quantita FROM copia cp 
-        WHERE cp.ID_collezione = _ID_collezione
-			AND cp.ID_disco = _ID_disco
-			AND cp.stato = _stato) > 1) THEN
+	IF ((SELECT d.quantita FROM disco d 
+        WHERE d.ID = _ID_disco) > 1) THEN
 	BEGIN
-		UPDATE copia cp
-		SET cp.quantita = cp.quantita - 1
-		WHERE cp.ID_collezione = _ID_collezione
-			AND cp.ID_disco = _ID_disco
-            AND cp.stato = _stato;
+		UPDATE disco d
+		SET d.quantita = d.quantita - 1
+		WHERE d.ID = _ID_disco;
 	END;
     ELSE
 	BEGIN
-		DELETE FROM copia cp
-        WHERE cp.ID_collezione = _ID_collezione 
-			AND cp.ID_disco = _ID_disco
-            AND cp.stato = _stato;
+		DELETE FROM disco d
+        WHERE d.ID = _ID_disco;           
 	END;
     END IF;
     RETURN "Copia eliminata";

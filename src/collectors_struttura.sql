@@ -41,30 +41,22 @@ CREATE TABLE artista (
 
 CREATE TABLE disco (
     ID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	ID_collezione INTEGER UNSIGNED NOT NULL,
     ID_autore INTEGER UNSIGNED NOT NULL,
     titolo VARCHAR(50) NOT NULL,
     formato VARCHAR(50) NOT NULL,
     barcode VARCHAR(12) UNIQUE,
-    CONSTRAINT formati CHECK (formato IN ('Vinile' , 'CD', 'Digitale', 'Musicassetta')),
-    CONSTRAINT disco_unico UNIQUE (ID_autore , titolo),
+    quantita SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+    stato VARCHAR(50) NOT NULL,
+	CONSTRAINT formati CHECK (formato IN ('Vinile' , 'CD', 'Digitale', 'Musicassetta')),
+    CONSTRAINT stati_conservazione CHECK (stato IN ('Nuovo' , 'Come nuovo', 'Buono', 'Cattivo', 'Pessimo', 'n/a')),
+    CONSTRAINT disco_unico UNIQUE (ID_autore, ID_collezione, titolo, formato, stato),
+    CONSTRAINT collezione_disco FOREIGN KEY (ID_collezione)
+		REFERENCES collezione (ID)
+        ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT autore_disco FOREIGN KEY (ID_autore)
         REFERENCES artista (ID)
         ON DELETE NO ACTION ON UPDATE CASCADE
-);
-
-CREATE TABLE copia (
-    ID_collezione INTEGER UNSIGNED NOT NULL,
-    ID_disco INTEGER UNSIGNED NOT NULL,
-    quantita SMALLINT UNSIGNED NOT NULL DEFAULT 1,
-    stato VARCHAR(50) NOT NULL,
-    CONSTRAINT disco_stato_unico UNIQUE (ID_collezione , ID_disco , stato),
-    CONSTRAINT stati_conservazione CHECK (stato IN ('Nuovo' , 'Come nuovo', 'Buono', 'Pessimo', 'n/a')),
-    CONSTRAINT collezione_copia FOREIGN KEY (ID_collezione)
-        REFERENCES collezione (ID)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT disco_copia FOREIGN KEY (ID_disco)
-        REFERENCES disco (ID)
-        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE immagine (
@@ -83,16 +75,8 @@ CREATE TABLE info_disco (
     genere VARCHAR(50),
     etichetta VARCHAR(50),
     anno SMALLINT UNSIGNED,
-    CONSTRAINT generi_musicali CHECK (genere IN ('Hip-Hop' , 'R&B',
-        'Blues',
-        'Funk',
-        'Jazz',
-        'Rock',
-        'Metal',
-        'Pop',
-        'Classica',
-        'Disco',
-        'Altro')),
+    CONSTRAINT generi_musicali CHECK (genere IN ('Hip-Hop' , 'R&B', 'Blues', 'Funk', 'Jazz',
+        'Rock', 'Metal', 'Pop', 'Classica', 'Disco', 'Altro')),
     CONSTRAINT controllo_anno CHECK (anno > 1900 AND anno < 2100),
     CONSTRAINT disco_dettagli FOREIGN KEY (ID_disco)
         REFERENCES disco (ID)
@@ -106,7 +90,7 @@ CREATE TABLE traccia (
     titolo VARCHAR(50) NOT NULL,
     durata TIME,
     CONSTRAINT controllo_durata CHECK (durata < '00:30:00'),
-    CONSTRAINT traccia_unica UNIQUE (ID_disco , numero),
+    CONSTRAINT traccia_unica UNIQUE (ID_disco , numero, titolo),
     CONSTRAINT disco_traccia FOREIGN KEY (ID_disco)
         REFERENCES disco (ID)
         ON DELETE CASCADE ON UPDATE CASCADE

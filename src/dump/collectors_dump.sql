@@ -97,25 +97,6 @@ LOCK TABLES `collezione` WRITE;
 INSERT INTO `collezione` VALUES (1,1,'My Collection','Pubblica'),(2,2,'Collezione Bianchi','Privata'),(3,3,'Collezione Francesco','Privata');
 /*!40000 ALTER TABLE `collezione` ENABLE KEYS */;
 UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `safe_delete_collezione` BEFORE DELETE ON `collezione` FOR EACH ROW BEGIN
-	DELETE disco, copia 
-    FROM disco 
-		JOIN copia ON (OLD.ID = copia.ID_collezione AND disco.ID = copia.ID_disco);
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `collezionista`
@@ -171,55 +152,6 @@ INSERT INTO `condivisione` VALUES (1,2),(3,2),(1,3),(2,3);
 UNLOCK TABLES;
 
 --
--- Table structure for table `copia`
---
-
-DROP TABLE IF EXISTS `copia`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `copia` (
-  `ID_collezione` int unsigned NOT NULL,
-  `ID_disco` int unsigned NOT NULL,
-  `quantita` smallint unsigned NOT NULL DEFAULT '1',
-  `stato` varchar(50) NOT NULL,
-  UNIQUE KEY `disco_stato_unico` (`ID_collezione`,`ID_disco`,`stato`),
-  KEY `disco_copia` (`ID_disco`),
-  CONSTRAINT `collezione_copia` FOREIGN KEY (`ID_collezione`) REFERENCES `collezione` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `disco_copia` FOREIGN KEY (`ID_disco`) REFERENCES `disco` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `stati_conservazione` CHECK ((`stato` in (_utf8mb4'Nuovo',_utf8mb4'Come nuovo',_utf8mb4'Buono',_utf8mb4'Pessimo',_utf8mb4'n/a')))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `copia`
---
-
-LOCK TABLES `copia` WRITE;
-/*!40000 ALTER TABLE `copia` DISABLE KEYS */;
-INSERT INTO `copia` VALUES (1,1,3,'Buono'),(1,2,4,'Come nuovo'),(2,4,1,'n/a'),(2,5,2,'Nuovo'),(3,3,2,'n/a'),(3,6,3,'Buono'),(3,6,1,'Come nuovo');
-/*!40000 ALTER TABLE `copia` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `safe_delete_disco` AFTER DELETE ON `copia` FOR EACH ROW BEGIN
-	DELETE FROM disco d
-    WHERE (SELECT COUNT(*) FROM copia cp WHERE cp.ID_disco = OLD.ID_disco) = 0
-		AND OLD.ID_disco = d.ID;		
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
 -- Table structure for table `disco`
 --
 
@@ -228,16 +160,22 @@ DROP TABLE IF EXISTS `disco`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `disco` (
   `ID` int unsigned NOT NULL AUTO_INCREMENT,
+  `ID_collezione` int unsigned NOT NULL,
   `ID_autore` int unsigned NOT NULL,
   `titolo` varchar(50) NOT NULL,
   `formato` varchar(50) NOT NULL,
   `barcode` varchar(12) DEFAULT NULL,
+  `quantita` smallint unsigned NOT NULL DEFAULT '1',
+  `stato` varchar(50) NOT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `disco_unico` (`ID_autore`,`titolo`),
+  UNIQUE KEY `disco_unico` (`ID_autore`,`ID_collezione`,`titolo`,`formato`,`stato`),
   UNIQUE KEY `barcode` (`barcode`),
+  KEY `collezione_disco` (`ID_collezione`),
   CONSTRAINT `autore_disco` FOREIGN KEY (`ID_autore`) REFERENCES `artista` (`ID`) ON UPDATE CASCADE,
-  CONSTRAINT `formati` CHECK ((`formato` in (_utf8mb4'Vinile',_utf8mb4'CD',_utf8mb4'Digitale',_utf8mb4'Musicassetta')))
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `collezione_disco` FOREIGN KEY (`ID_collezione`) REFERENCES `collezione` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `formati` CHECK ((`formato` in (_utf8mb4'Vinile',_utf8mb4'CD',_utf8mb4'Digitale',_utf8mb4'Musicassetta'))),
+  CONSTRAINT `stati_conservazione` CHECK ((`stato` in (_utf8mb4'Nuovo',_utf8mb4'Come nuovo',_utf8mb4'Buono',_utf8mb4'Cattivo',_utf8mb4'Pessimo',_utf8mb4'n/a')))
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -246,7 +184,7 @@ CREATE TABLE `disco` (
 
 LOCK TABLES `disco` WRITE;
 /*!40000 ALTER TABLE `disco` DISABLE KEYS */;
-INSERT INTO `disco` VALUES (1,1,'Graduation','Vinile',NULL),(2,1,'808s & Heartbreak','CD','82156179'),(3,2,'Man on The Moon','Digitale',NULL),(4,3,'HEROES & VILLAINS','Digitale','561795468941'),(5,4,'Meteora','CD',NULL),(6,4,'Hybrid Theory','Vinile',NULL);
+INSERT INTO `disco` VALUES (1,1,1,'Graduation','Vinile',NULL,3,'Buono'),(2,1,1,'808s & Heartbreak','CD','82156179',4,'Come nuovo'),(3,3,2,'Man on The Moon','Digitale',NULL,2,'n/a'),(4,2,3,'HEROES & VILLAINS','Digitale','561795468941',1,'n/a'),(5,2,4,'Meteora','CD',NULL,2,'Nuovo'),(6,3,4,'Hybrid Theory','Vinile',NULL,3,'Buono'),(7,3,4,'Hybrid Theory','Vinile',NULL,1,'Come nuovo');
 /*!40000 ALTER TABLE `disco` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -303,7 +241,7 @@ CREATE TABLE `info_disco` (
 
 LOCK TABLES `info_disco` WRITE;
 /*!40000 ALTER TABLE `info_disco` DISABLE KEYS */;
-INSERT INTO `info_disco` VALUES (2,'Hip-Hop','Roc-A-Fella Records',2008),(3,'Hip-Hop','GOOD Music',2009),(4,'Pop','Boominati',2022),(5,'Rock',NULL,2003),(6,'Rock','Warner Bros. Records',2000);
+INSERT INTO `info_disco` VALUES (2,'Hip-Hop','Roc-A-Fella Records',2008),(3,'Hip-Hop','GOOD Music',2009),(4,'Pop','Boominati',2022),(5,'Rock',NULL,2003),(6,'Rock','Warner Bros. Records',2000),(7,'Rock','Warner Bros. Records',2000);
 /*!40000 ALTER TABLE `info_disco` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -347,10 +285,10 @@ CREATE TABLE `traccia` (
   `titolo` varchar(50) NOT NULL,
   `durata` time DEFAULT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `traccia_unica` (`ID_disco`,`numero`),
+  UNIQUE KEY `traccia_unica` (`ID_disco`,`numero`,`titolo`),
   CONSTRAINT `disco_traccia` FOREIGN KEY (`ID_disco`) REFERENCES `disco` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `controllo_durata` CHECK ((`durata` < _utf8mb4'00:30:00'))
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -359,7 +297,7 @@ CREATE TABLE `traccia` (
 
 LOCK TABLES `traccia` WRITE;
 /*!40000 ALTER TABLE `traccia` DISABLE KEYS */;
-INSERT INTO `traccia` VALUES (1,2,2,'Welcome To Heartbreak','00:04:22'),(2,5,13,'Numb',NULL),(3,4,10,'Creepin\'','00:03:41'),(4,4,2,'Superhero','00:03:02'),(5,4,7,'Around Me','00:03:11'),(6,6,2,'One Step Closer',NULL),(7,6,8,'In The End','00:03:36');
+INSERT INTO `traccia` VALUES (1,2,2,'Welcome To Heartbreak','00:04:22'),(2,5,13,'Numb',NULL),(3,4,10,'Creepin\'','00:03:41'),(4,4,2,'Superhero','00:03:02'),(5,4,7,'Around Me','00:03:11'),(6,6,2,'One Step Closer',NULL),(7,6,8,'In The End','00:03:36'),(8,7,2,'One Step Closer',NULL),(9,7,8,'In The End','00:03:36');
 /*!40000 ALTER TABLE `traccia` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -435,31 +373,28 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` FUNCTION `aggiungi_disco`(
 	ID_collezione INTEGER UNSIGNED, quantita SMALLINT UNSIGNED, stato VARCHAR(50), 
-    ID_autore INTEGER UNSIGNED, titolo VARCHAR(50), formato varchar(20), 
+    ID_autore INTEGER UNSIGNED, titolo VARCHAR(50), formato VARCHAR(20), 
     barcode VARCHAR(12), genere VARCHAR(50), etichetta VARCHAR(50), anno SMALLINT UNSIGNED) RETURNS int unsigned
     DETERMINISTIC
 BEGIN
     DECLARE IDdisco INTEGER UNSIGNED;
 
-	INSERT INTO disco (ID_autore, titolo, formato, barcode) 
-    VALUES (ID_autore, titolo, formato, barcode);
+	IF (formato = 'Digitale') THEN
+    BEGIN
+		INSERT INTO disco (ID_autore, ID_collezione, titolo, formato, barcode, quantita, stato) 
+		VALUES (ID_autore, ID_collezione, titolo, formato, barcode, quantita, 'n/a');
+	END;
+    ELSE
+    BEGIN
+		INSERT INTO disco (ID_autore, ID_collezione, titolo, formato, barcode, quantita, stato) 
+		VALUES (ID_autore, ID_collezione, titolo, formato, barcode, quantita, stato);
+	END;
+    END IF;
     
     SET IDdisco = last_insert_id();
     
     INSERT INTO info_disco (ID_disco, genere, etichetta, anno)
     VALUES (IDdisco, genere, etichetta, anno);
-	
-    IF (formato = 'Digitale') THEN
-    BEGIN
-		INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
-		VALUES (ID_collezione, IDdisco, quantita, 'n/a');
-	END;
-    ELSE
-    BEGIN
-		INSERT INTO copia (ID_collezione, ID_disco, quantita, stato)
-		VALUES (ID_collezione, IDdisco, quantita, stato);
-    END;
-    END IF;
     
     RETURN IDdisco;
 END ;;
@@ -501,26 +436,20 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `elimina_copia`(_ID_collezione INTEGER UNSIGNED, _ID_disco INTEGER UNSIGNED, _stato VARCHAR(50)) RETURNS varchar(50) CHARSET utf8mb4
+CREATE DEFINER=`root`@`localhost` FUNCTION `elimina_copia`(_ID_disco INTEGER UNSIGNED) RETURNS varchar(50) CHARSET utf8mb4
     DETERMINISTIC
 BEGIN
-	IF ((SELECT cp.quantita FROM copia cp 
-        WHERE cp.ID_collezione = _ID_collezione
-			AND cp.ID_disco = _ID_disco
-			AND cp.stato = _stato) > 1) THEN
+	IF ((SELECT d.quantita FROM disco d 
+        WHERE d.ID = _ID_disco) > 1) THEN
 	BEGIN
-		UPDATE copia cp
-		SET cp.quantita = cp.quantita - 1
-		WHERE cp.ID_collezione = _ID_collezione
-			AND cp.ID_disco = _ID_disco
-            AND cp.stato = _stato;
+		UPDATE disco d
+		SET d.quantita = d.quantita - 1
+		WHERE d.ID = _ID_disco;
 	END;
     ELSE
 	BEGIN
-		DELETE FROM copia cp
-        WHERE cp.ID_collezione = _ID_collezione 
-			AND cp.ID_disco = _ID_disco
-            AND cp.stato = _stato;
+		DELETE FROM disco d
+        WHERE d.ID = _ID_disco;           
 	END;
     END IF;
     RETURN "Copia eliminata";
@@ -542,11 +471,10 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_collezione`(ID INTEGER UNSIGNED)
 BEGIN
-	SELECT c.quantita, d.titolo, a.nome AS artista, d.formato, d.barcode, c.stato 
-	FROM copia c 
-		JOIN disco d ON (c.ID_disco = d.ID)
+	SELECT d.quantita, d.titolo, a.nome AS artista, d.formato, d.barcode, d.stato 
+	FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-	WHERE c.ID_collezione = ID
+	WHERE d.ID_collezione = ID
 	ORDER BY d.titolo;
 END ;;
 DELIMITER ;
@@ -567,31 +495,28 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_per_artista`(nome VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
-		JOIN copia cp ON (d.ID = cp.ID_disco)
-		JOIN collezione c ON (cp.ID_collezione = c.ID)
+		JOIN collezione c ON (d.ID_collezione = c.ID)
 	WHERE c.visibilita = 'Pubblica' AND a.nome LIKE CONCAT ('%', nome, '%')
 	)
     UNION
     (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione 
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-		JOIN collezione c ON (cp.ID_collezione = c.ID)
+		JOIN collezione c ON (d.ID_collezione = c.ID)
 	WHERE _ID_collezionista IS NOT NULL 
 		AND c.ID_collezionista = _ID_collezionista 
         AND a.nome LIKE CONCAT ('%', nome, '%')
 	)
     UNION
     (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita_collezione 
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
         JOIN condivisione con ON (c.ID = con.ID_collezione)
 	WHERE _ID_collezionista IS NOT NULL 
 		AND con.ID_collezionista = _ID_collezionista 
@@ -616,31 +541,28 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_per_barcode`(barcode VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
     WHERE c.visibilita = 'Pubblica' AND d.barcode LIKE CONCAT(barcode, '%')
     )
     UNION
     (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
     WHERE _ID_collezionista IS NOT NULL 
 		AND c.ID_collezionista = _ID_collezionista 
         AND d.barcode LIKE CONCAT(barcode, '%')
     )
     UNION
     (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita_collezione
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
         JOIN condivisione con ON (c.ID = con.ID_collezione)
     WHERE _ID_collezionista IS NOT NULL 
 		AND con.ID_collezionista = _ID_collezionista 
@@ -665,31 +587,28 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_per_titolo`(titolo VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
     WHERE c.visibilita = 'Pubblica' AND d.titolo LIKE CONCAT('%', titolo, '%')
     )
     UNION
     (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita AS visibilita_collezione
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
     WHERE _ID_collezionista IS NOT NULL 
 		AND c.ID_collezionista = _ID_collezionista 
         AND d.titolo LIKE CONCAT('%', titolo, '%')
     )
     UNION
     (
-	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita_collezione
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
         JOIN condivisione con ON (c.ID = con.ID_collezione)
     WHERE _ID_collezionista IS NOT NULL 
 		AND con.ID_collezionista = _ID_collezionista 
@@ -716,10 +635,9 @@ BEGIN
 	SELECT a.nome, SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata))) as minuti_artista
     FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
         JOIN traccia t ON (d.ID = t.ID_disco)
-    WHERE c.visibilita = 'pubblica' AND ID_artista = a.ID
+    WHERE c.visibilita = 'Pubblica' AND ID_artista = a.ID
     GROUP BY a.nome;
 END ;;
 DELIMITER ;
@@ -742,8 +660,7 @@ BEGIN
 	SELECT a.nome, COUNT(DISTINCT t.titolo) as numero_brani
     FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
         JOIN traccia t ON (d.ID = t.ID_disco)
     WHERE c.visibilita = 'Pubblica' AND ID_artista = a.ID
     GROUP BY a.nome;
@@ -829,7 +746,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `num_collezioni_collezionisti` AS select `p`.`nickname` AS `nickname`,count(0) AS `numero_collezioni` from (`collezionista` `p` join `collezione` `c` on((`p`.`ID` = `c`.`ID_collezionista`))) group by `p`.`nickname` */;
+/*!50001 VIEW `num_collezioni_collezionisti` AS select `p`.`nickname` AS `nickname`,count(0) AS `numero_collezioni` from (`collezionista` `p` join `collezione` `c` on((`p`.`ID` = `c`.`ID_collezionista`))) group by `p`.`nickname` order by `p`.`nickname` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -847,7 +764,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `num_dischi_generi` AS select `info`.`genere` AS `genere`,count(0) AS `numero_dischi` from (`disco` `d` left join `info_disco` `info` on((`d`.`ID` = `info`.`ID_disco`))) group by `info`.`genere` */;
+/*!50001 VIEW `num_dischi_generi` AS select `info`.`genere` AS `genere`,count(0) AS `numero_dischi` from (`disco` `d` left join `info_disco` `info` on((`d`.`ID` = `info`.`ID_disco`))) group by `info`.`genere` order by `info`.`genere` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -861,4 +778,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-06-13 12:20:48
+-- Dump completed on 2023-06-13 18:14:03

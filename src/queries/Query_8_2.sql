@@ -6,4 +6,4 @@
 -- sulle collezioni private, condivise e pubbliche)
 
 -- Ricerca di dischi in base al titolo
-CALL dischi_per_titolo("808", 1);
+CALL dischi_per_titolo("HEROES", 3);

@@ -5,10 +5,9 @@ BEGIN
 	SELECT a.nome, SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata))) as minuti_artista
     FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN collezione c ON (d.ID_collezione = c.ID)
         JOIN traccia t ON (d.ID = t.ID_disco)
-    WHERE c.visibilita = 'pubblica' AND ID_artista = a.ID
+    WHERE c.visibilita = 'Pubblica' AND ID_artista = a.ID
     GROUP BY a.nome;
 END$
 DELIMITER ;
