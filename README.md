@@ -569,9 +569,9 @@ FROM num_dischi_generi;
 
 #### Funzionalità 13
 
-> Opzionalmente, dati un numero di barcode, un titolo e il nome di un autore, individuare tutti i dischi presenti nelle collezioni che sono più coerenti con questi dati (funzionalità utile, ad esempio, per individuare un disco già presente nel sistema prima di inserirne un doppione). L'idea è che il barcode è univoco, quindi i dischi con lo stesso barcode sono senz'altro molto coerenti, dopodichè è possibile cercare dischi con titolo simile e/o con l'autore dato, assegnando maggior punteggio di somiglianza a quelli che hanno più corrispondenze. Questa operazione può essere svolta con una stored procedure o implementata nell'interfaccia Java/PHP.
+> Opzionalmente, dati un numero di barcode, un titolo e il nome di un autore, individuare tutti i dischi presenti nelle collezioni che sono più coerenti con questi dati (funzionalità utile, ad esempio, per individuare un disco già presente nel sistema prima di inserirne un doppione). L'idea è che il barcode è univoco, quindi i dischi con lo stesso barcode sono senz'altro molto coerenti, dopodichè è possibile cercare dischi con titolo simile e/o con l'autore dato, assegnando maggior punteggio di somiglianza a quelli che hanno più corrispondenze.
 
-Un modo per implementare questa funzionalità è quello di combinare i risultati della procedura qui specificata con quelli delle procedure viste nella funzionalità 8 (*dischi_per_titolo* e *dischi_per_artista*).
+Un modo per implementare questa funzionalità è quello di combinare i risultati della [procedura](src/functions_and_procedures/dischi_per_barcode) qui specificata con quelli delle procedure viste nella funzionalità 8 (*dischi_per_titolo* e *dischi_per_artista*).
 ```sql
 DROP PROCEDURE IF EXISTS dischi_per_barcode;
 DELIMITER $
