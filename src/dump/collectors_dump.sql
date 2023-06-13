@@ -478,9 +478,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `aggiungi_traccia`(
-	ID_disco INTEGER UNSIGNED, numero TINYINT UNSIGNED, 
-    titolo VARCHAR(50), durata TIME) RETURNS int unsigned
+CREATE DEFINER=`root`@`localhost` FUNCTION `aggiungi_traccia`(ID_disco INTEGER UNSIGNED, numero TINYINT UNSIGNED, titolo VARCHAR(50), durata TIME) RETURNS int unsigned
     DETERMINISTIC
 BEGIN
 	INSERT INTO traccia (ID_disco, numero, titolo, durata) 
@@ -569,7 +567,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_per_artista`(nome VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
 		JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -578,7 +576,7 @@ BEGIN
 	)
     UNION
     (
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -589,7 +587,7 @@ BEGIN
 	)
     UNION
     (
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, "Condivisa con te" AS visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -599,6 +597,55 @@ BEGIN
 		AND con.ID_collezionista = _ID_collezionista 
         AND a.nome LIKE CONCAT ('%', nome, '%')
 	);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `dischi_per_barcode` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_per_barcode`(barcode VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
+BEGIN
+	(
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+    WHERE c.visibilita = 'Pubblica' AND d.barcode LIKE CONCAT(barcode, '%')
+    )
+    UNION
+    (
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+    WHERE _ID_collezionista IS NOT NULL 
+		AND c.ID_collezionista = _ID_collezionista 
+        AND d.barcode LIKE CONCAT(barcode, '%')
+    )
+    UNION
+    (
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
+    FROM disco d 
+		JOIN artista a ON (d.ID_autore = a.ID)
+        JOIN copia cp ON (d.ID = cp.ID_disco)
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
+        JOIN condivisione con ON (c.ID = con.ID_collezione)
+    WHERE _ID_collezionista IS NOT NULL 
+		AND con.ID_collezionista = _ID_collezionista 
+		AND d.barcode LIKE CONCAT(barcode, '%')
+    );
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -618,7 +665,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dischi_per_titolo`(titolo VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, c.visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -627,7 +674,7 @@ BEGIN
     )
     UNION
     (
-	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, c.visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -638,7 +685,7 @@ BEGIN
     )
     UNION
     (
-	SELECT a.nome as artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita
     FROM disco d 
 		JOIN artista a ON (d.ID_autore = a.ID)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -666,24 +713,14 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `minuti_artista`(ID_artista INTEGER)
 BEGIN
-	SELECT a.nome,
-	(SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata)))
+	SELECT a.nome, SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata))) as minuti_artista
     FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID AND c.visibilita = 'Pubblica')
+        JOIN collezione c ON (cp.ID_collezione = c.ID)
         JOIN traccia t ON (d.ID = t.ID_disco)
-    ) AS minuti,
-    (SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(t.durata)))
-    FROM artista a
-		JOIN collaborazione col ON (a.ID = col.ID_artista)
-        JOIN traccia t ON (col.ID_artista = t.ID)
-        JOIN disco d ON (t.ID_disco = d.ID)
-        JOIN copia cp ON (d.ID = cp.ID_disco)
-        JOIN collezione c ON (cp.ID_collezione = c.ID AND c.visibilita = 'Pubblica')
-	) AS minuti_featuring
-    FROM artista a
-    WHERE ID_artista = a.ID; 
+    WHERE c.visibilita = 'pubblica' AND ID_artista = a.ID
+    GROUP BY a.nome;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -751,25 +788,25 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `verifica_visibilita`(ID_collezionista INTEGER, ID_collezione INTEGER)
 BEGIN
 	(
-		SELECT collezione.nome, collezione.visibilita
-		FROM collezione
-		WHERE ID_collezionista = collezione.ID_collezionista 
-			AND ID_collezione = collezione.ID
+	SELECT collezione.nome, collezione.visibilita
+	FROM collezione
+	WHERE ID_collezionista = collezione.ID_collezionista 
+		AND ID_collezione = collezione.ID
 	)
 	UNION
 	(
-		SELECT collezione.nome, collezione.visibilita
-		FROM collezione
-		WHERE ID_collezione = collezione.ID 
-			AND collezione.visibilita = 'Pubblica'
+	SELECT collezione.nome, collezione.visibilita
+	FROM collezione
+	WHERE ID_collezione = collezione.ID 
+		AND collezione.visibilita = 'Pubblica'
 	)
 	UNION
 	(
-		SELECT collezione.nome, 'Condivisa con te' AS visibilita
-		FROM collezione, condivisione
-		WHERE ID_collezione = condivisione.ID_collezione 
-			AND ID_collezionista = condivisione.ID_collezionista 
-			AND ID_collezione = collezione.ID
+	SELECT collezione.nome, 'Condivisa con te' AS visibilita
+	FROM collezione, condivisione
+	WHERE ID_collezione = condivisione.ID_collezione 
+		AND ID_collezionista = condivisione.ID_collezionista 
+		AND ID_collezione = collezione.ID
 	)
     LIMIT 1;
 END ;;
@@ -824,4 +861,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-06-11 12:23:38
+-- Dump completed on 2023-06-13 12:20:48

@@ -3,7 +3,7 @@ DELIMITER $
 CREATE PROCEDURE dischi_per_artista (nome VARCHAR(50), _ID_collezionista INTEGER UNSIGNED)
 BEGIN
 	(
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
 		JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -12,7 +12,7 @@ BEGIN
 	)
     UNION
     (
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, c.visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, c.visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
@@ -23,7 +23,7 @@ BEGIN
 	)
     UNION
     (
-	SELECT a.nome AS artista, a.tipo, d.titolo AS disco, d.formato, d.barcode, "Condivisa con te" AS visibilita  
+	SELECT a.nome AS artista, a.tipo AS tipo_artista, d.titolo, d.formato, d.barcode, "Condivisa con te" AS visibilita  
 	FROM artista a
 		JOIN disco d ON (a.ID = d.ID_autore)
         JOIN copia cp ON (d.ID = cp.ID_disco)
