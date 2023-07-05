@@ -1,13 +1,5 @@
 # Laboratorio di Basi di Dati: *Progetto "Collectors"*
 
-**Gruppo di lavoro**:
-
-| Matricola | Nome  |             Cognome             | Contributo al progetto |
-|:---------:|:-----:|:-------------------------------:|:----------------------:|
-|  271744   | Marco |             Ciucci              |         Totale         | 
-
-**Data di consegna del progetto**: 13/06/2023
-
 ## Analisi dei requisiti
 
 - Registrazione di dati relativi ai collezionisti e alle loro collezioni di dischi (ogni collezionista può creare più collezioni). 
