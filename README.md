@@ -344,7 +344,7 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_8_1.sql) di esempio.
+[Query](src/queries/Query_8.1.sql) di esempio.
 ```sql
 CALL dischi_per_artista("Linkin", 3);
 ```
@@ -387,7 +387,7 @@ BEGIN
 END$
 DELIMITER ;
 ```
-[Query](src/queries/Query_8_2.sql) di esempio.
+[Query](src/queries/Query_8.2.sql) di esempio.
 ```sql
 CALL dischi_per_titolo("HEROES", 3);
 ```
@@ -496,7 +496,7 @@ FROM collezionista p
 GROUP BY p.nickname
 ORDER BY p.nickname;
 ```
-[Query](src/queries/Query_12_1.sql) di esempio.
+[Query](src/queries/Query_12.1.sql) di esempio.
 ```sql
 SELECT * 
 FROM num_collezioni_collezionisti;
@@ -511,7 +511,7 @@ FROM info_disco info
 GROUP BY info.genere
 ORDER BY info.genere;
 ```
-[Query](src/queries/Query_12_2.sql) di esempio.
+[Query](src/queries/Query_12.2.sql) di esempio.
 ```sql
 SELECT *
 FROM num_dischi_generi;
